@@ -91,7 +91,7 @@ export default function Home() {
     <div className="flex">
 
     
-    <div className="h-screen w-3/4">
+    <div className="h-screen w-full relative">
       {typeof window !== "undefined" && L ? (
         <MapContainer center={currentLocation || [45.0, -93.0]} zoom={11} className="w-full h-full relative z-10 rounded">
           <TileLayer
@@ -137,17 +137,18 @@ export default function Home() {
     </div>
 
 
-    <div className="w-1/4 h-screen">
+    <div className="bg-white/3 backdrop-filter backdrop-blur-xs text-black text-center flex fixed top-7 right-7  z-50 p-2 rounded-md shadow-xl
+    ">
       {/* List of Lakes */}
       {loading ? (
         <p className="text-gray-400 text-center">Loading lakes...</p>
       ) : (
-        <ul className="p-4">
+        <ul className="p-4 space-y-2">
           {lakes.map((lake) => (
             <li
               key={lake.id}
               onClick={() => router.push(`/lake/${lake.id}`)}
-              className="cursor-pointer border border-gray-300 p-2 rounded hover:border-red-400 transition-colors"
+              className="cursor-pointer border border-black/20 p-2 rounded hover:border-red-400 transition-colors"
             >
               {lake.name} - {lake.distance}
             </li>
