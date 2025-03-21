@@ -1,0 +1,26 @@
+import React from "react";
+
+const Footer = () => {
+    return (
+        <footer style={footerStyle}>
+            <div style={containerStyle}>
+                <p>&copy; {new Date().getFullYear()} Your Company. All rights reserved.</p>
+            </div>
+        </footer>
+    );
+};
+
+const footerStyle = {
+    backgroundColor: "#f8f8f8",
+    padding: "1rem 0",
+    borderTop: "1px solid #e7e7e7",
+    textAlign: "center",
+};
+
+const containerStyle = {
+    maxWidth: "1200px",
+    margin: "0 auto",
+    padding: "0 1rem",
+};
+
+export default Footer;

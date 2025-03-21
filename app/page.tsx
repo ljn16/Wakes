@@ -5,6 +5,10 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useMapEvents } from "react-leaflet";
 
+import placeholderImage from "./placeholder.png";
+import lakePH from "./lakePH.jpg";
+import Image from "next/image";
+
 // Dynamically import react-leaflet components with SSR disabled
 const MapContainer = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
@@ -18,10 +22,9 @@ const Marker = dynamic(
   () => import("react-leaflet").then((mod) => mod.Marker),
   { ssr: false }
 );
-const Popup = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Popup),
-  { ssr: false }
-);
+const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), {
+  ssr: false,
+});
 const Circle = dynamic(
   () => import("react-leaflet").then((mod) => mod.Circle),
   { ssr: false }
@@ -36,8 +39,9 @@ interface Lake {
 }
 
 export default function Home() {
-  const [currentLocation, setCurrentLocation] =
-    useState<[number, number] | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<
+    [number, number] | null
+  >(null);
   const [lakes, setLakes] = useState<Lake[]>([
     {
       id: 3,
@@ -92,7 +96,7 @@ export default function Home() {
       id: 10,
       name: "Bde Maka Ska",
       distance: "",
-      latitude: 44.9420,
+      latitude: 44.942,
       longitude: -93.3117,
     },
     {
@@ -114,14 +118,22 @@ export default function Home() {
   useEffect(() => {
     if (!currentLocation) return;
 
-    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const calculateDistance = (
+      lat1: number,
+      lon1: number,
+      lat2: number,
+      lon2: number
+    ) => {
       const toRad = (value: number) => (value * Math.PI) / 180;
       const R = 3958.8; // Radius of the Earth in miles
       const dLat = toRad(lat2 - lat1);
       const dLon = toRad(lon2 - lon1);
       const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        Math.cos(toRad(lat1)) *
+          Math.cos(toRad(lat2)) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c; // Distance in miles
     };
@@ -151,7 +163,9 @@ export default function Home() {
     // Helper function for fetching lakes
     const fetchLakes = (lat?: number, lon?: number) => {
       const url =
-        lat && lon ? `/api/lakes?latitude=${lat}&longitude=${lon}` : "/api/lakes";
+        lat && lon
+          ? `/api/lakes?latitude=${lat}&longitude=${lon}`
+          : "/api/lakes";
       fetch(url)
         .then((res) => {
           if (!res.ok) throw new Error("Failed to load lakes");
@@ -215,53 +229,66 @@ export default function Home() {
     useMapEvents({
       mousemove: (e) => {
         setCoords(e.latlng);
-      }
+      },
     });
     return (
-      <div style={{
-        position: "absolute",
-        bottom: "10px",
-        right: "10px",
-        background: "rgba(255,255,255,0.8)",
-        padding: "5px",
-        borderRadius: "5px",
-        zIndex: 1000
-      }}>
+      <div
+        style={{
+          position: "absolute",
+          bottom: "10px",
+          right: "10px",
+          background: "rgba(255,255,255,0.8)",
+          padding: "5px",
+          borderRadius: "5px",
+          zIndex: 1000,
+        }}
+      >
         {`Lat: ${coords.lat.toFixed(4)}, Lng: ${coords.lng.toFixed(4)}`}
       </div>
     );
   }
 
   return (
-    <div className="flex">
-      <div className="h-screen w-full relative">
-        {typeof window !== "undefined" && L ? (
+    <>
+      <div className="flex">
+        <div className="h-screen w-full relative">
+          {typeof window !== "undefined" && L ? (
             <MapContainer
-            center={currentLocation || [45.0, -93.0]}
-            zoom={11}
-            className="w-full h-full relative z-10 rounded"
-            style={{ opacity: 0.95 }}
+              center={currentLocation || [45.0, -93.0]}
+              zoom={11}
+              className="w-full h-full relative z-10 rounded"
+              style={{ opacity: 0.95 }}
             >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                // attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              />
 
+              <span className="text-black">
+                <MouseCoordinates />
+              </span>
+              {currentLocation && (
+                <>
+                  {/* Inject the gradient definition into the DOM */}
+                  <svg style={{ height: 0, width: 0, position: "absolute" }}>
+                    <defs>
+                      <radialGradient
+                        id="circleGradient"
+                        cx="50%"
+                        cy="50%"
+                        r="50%"
+                      >
+                        <stop offset="50%" stopColor="blue" stopOpacity={0.5} />
+                        <stop
+                          offset="100%"
+                          stopColor="blue"
+                          stopOpacity={0.3}
+                        />
+                      </radialGradient>
+                    </defs>
+                  </svg>
 
-            <span className="text-black"><MouseCoordinates /></span>
-            {currentLocation && (
-              <>
-                {/* Inject the gradient definition into the DOM */}
-                <svg style={{ height: 0, width: 0, position: "absolute" }}>
-                  <defs>
-                    <radialGradient id="circleGradient" cx="50%" cy="50%" r="50%">
-                      <stop offset="50%" stopColor="blue" stopOpacity={0.5} />
-                      <stop offset="100%" stopColor="blue" stopOpacity={0.3} />
-                    </radialGradient>
-                  </defs>
-                </svg>
-
-                {/* <Circle
+                  {/* <Circle
                   center={currentLocation}
                   radius={(radius * 1609.34) / 3} // half the outer circle's radius
                   pathOptions={{ 
@@ -277,106 +304,117 @@ export default function Home() {
                     fillColor: 'url(#circleGradient)', 
                   }}
                 /> */}
-                <Circle
-                  center={currentLocation}
-                  radius={(radius * 1609.34) * 1/2} // half the outer circle's radius
-                  pathOptions={{ 
-                    stroke: false, 
-                    fillColor: 'url(#circleGradient)', 
-                  }}
-                />
-                <Circle
-                  center={currentLocation}
-                  radius={radius * 1609.34} // convert miles to meters
-                  pathOptions={{
-                    stroke: false,
-                    fillColor: "url(#circleGradient)"
-                  }}
-                />
-              </>
-            )}
-            {lakes
-              .filter(
-              (lake) =>
-                  typeof lake.longitude === "number"
-              )
-              .map((lake) => (
-                <Marker
-                  key={lake.id}
-                  position={[lake.latitude, lake.longitude]}
-                  eventHandlers={{
-                  mouseover: (e) => e.target.openPopup(),
-                  mouseout: (e) => e.target.closePopup(),
-                  click: () => router.push(`/lake/${lake.id}`),
-                  }}
-                  icon={blueIcon!}
-                >
-                  <Popup>
-                    <strong>{lake.name}</strong>&nbsp;{lake.distance}
-                  </Popup>
-                </Marker>
-              ))}
-
-            {/* Render marker for the user's current location */}
-            {currentLocation && lakeIcon && (
-              <Marker position={currentLocation} icon={lakeIcon}>
-                <Popup>You are here</Popup>
-              </Marker>
-            )}
-          </MapContainer>
-        ) : (
-          <div className="flex justify-center items-center h-[500px]">
-            <p className="text-gray-400">Loading map...</p>
-          </div>
-        )}
-      </div>
-
-      <div className="bg-white/3 backdrop-filter backdrop-blur-xs text-black text-center flex fixed top-7 right-7 z-50 p-2 rounded-md shadow-xl">
-        {/* Render list of lakes */}
-        {loading ? (
-          <p className="text-gray-400 text-center">Loading lakes...</p>
-        ) : (
-          <div className="flex flex-col items-center">
-            <span>
-            <label htmlFor="radius">Search Radius </label>
-            <input
-              id="radius"
-              type="range"
-              min="1"
-              max="50"
-              step="1"
-              value={radius}
-              onChange={(e) => setRadius(Number(e.target.value))}
-              style={{ width: "60px", border: "none", outline: "none", cursor: "pointer" }}
-            />
-            <span>{radius} mi</span>
-          </span>
-            <ul className="p-4 space-y-2">
+                  <Circle
+                    center={currentLocation}
+                    radius={(radius * 1609.34 * 1) / 2} // half the outer circle's radius
+                    pathOptions={{
+                      stroke: false,
+                      fillColor: "url(#circleGradient)",
+                    }}
+                  />
+                  <Circle
+                    center={currentLocation}
+                    radius={radius * 1609.34} // convert miles to meters
+                    pathOptions={{
+                      stroke: false,
+                      fillColor: "url(#circleGradient)",
+                    }}
+                  />
+                </>
+              )}
               {lakes
-                .slice()
-                .sort((a, b) => {
-                  const distanceA = parseFloat(a.distance.split(" ")[0]);
-                  const distanceB = parseFloat(b.distance.split(" ")[0]);
-                  return distanceA - distanceB;
-                })
-                .map((lake) => {
-                  const lakeDistance = parseFloat(lake.distance.split(" ")[0]);
-                  return (
-                    <li
-                      key={lake.id}
-                      onClick={() => router.push(`/lake/${lake.id}`)}
-                      className="cursor-pointer border border-black/20 p-2 rounded hover:border-blue-800/45 hover:bg-blue-400/10 transition-colors"
-                      style={{ opacity: lakeDistance > radius ? 0.5 : 1 }}
-                    >
-                      <span>{lake.name}</span>&nbsp;
-                      <span className="text-black/50">{lake.distance}</span>
-                    </li>
-                  );
-                })}
-            </ul>
-          </div>
-        )}
+                .filter((lake) => typeof lake.longitude === "number")
+                .map((lake) => (
+                  <Marker
+                    key={lake.id}
+                    position={[lake.latitude, lake.longitude]}
+                    eventHandlers={{
+                      mouseover: (e) => e.target.openPopup(),
+                      mouseout: (e) => e.target.closePopup(),
+                      click: () => router.push(`/lake/${lake.id}`),
+                    }}
+                    icon={blueIcon!}
+                  >
+                    <Popup>
+                      <strong>{lake.name}</strong>&nbsp;{lake.distance}
+                    </Popup>
+                  </Marker>
+                ))}
+
+              {/* Render marker for the user's current location */}
+              {currentLocation && lakeIcon && (
+                <Marker position={currentLocation} icon={lakeIcon}>
+                  <Popup>You are here</Popup>
+                </Marker>
+              )}
+            </MapContainer>
+          ) : (
+            <div className="flex justify-center items-center h-[500px]">
+              <p className="text-gray-400">Loading map...</p>
+            </div>
+          )}
+        </div>
+        <div className="bg-white/3 backdrop-filter backdrop-blur-xs text-black text-center flex fixed top-7 right-7 z-50 p-2 rounded-md shadow-xl max-h-[50vh] md:max-h-11/12 overflow-auto">
+          {/* Render list of lakes */}
+          {loading ? (
+            <p className="text-gray-400 text-center">Loading lakes...</p>
+          ) : (
+            <div className="flex flex-col items-center">
+              <div className="sticky top-0 z-50 bg-white rounded-md p-2">
+                {/* <label htmlFor="radius">Search Radius </label> */}
+                <input
+                  className="cursor-pointer mx-2"
+                  id="radius"
+                  type="range"
+                  min="1"
+                  max="50"
+                  step="1"
+                  value={radius}
+                  onChange={(e) => setRadius(Number(e.target.value))}
+                />
+                <span>{radius} mi</span>
+              </div>
+              <ul className="p-4 space-y-2">
+                {lakes
+                  .slice()
+                  .sort((a, b) => {
+                    const distanceA = parseFloat(a.distance.split(" ")[0]);
+                    const distanceB = parseFloat(b.distance.split(" ")[0]);
+                    return distanceA - distanceB;
+                  })
+                  .map((lake) => {
+                    const lakeDistance = parseFloat(
+                      lake.distance.split(" ")[0]
+                    );
+                    return (
+                      <li
+                        key={lake.id}
+                        onClick={() => router.push(`/lake/${lake.id}`)}
+                        className=" flex cursor-pointer border border-black/20 p-2 rounded hover:border-blue-800/45 hover:bg-blue-400/10 transition-colors"
+                        style={{ opacity: lakeDistance > radius ? 0.5 : 1 }}
+                      >
+                        <span className="h-20 w-20 bg-amber-400 mr-2">
+                          <Image
+                            src={lakePH.src}
+                            alt="placeholder"
+                            className="h-full w-full object-cover"
+                            width={20}
+                            height={20}
+                          />
+                        </span>
+                        <span>{lake.name}</span>&nbsp;
+                        <span className="text-black/50">{lake.distance}</span>
+                      </li>
+                    );
+                  })}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+      <footer className="bg-white/35 text-gray-600 text-center flex fixed bottom-0 left-0 z-50 w-full overflow-auto justify-center">
+        <span className="bg-gradient-to-r from-white/0 via-white to-white/0 w-1/4">&copy; {new Date().getFullYear()} Wakes. All rights reserved.</span>
+      </footer>
+    </>
   );
 }
