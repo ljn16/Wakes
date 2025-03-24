@@ -14,7 +14,7 @@ const s3 = new S3({
 });
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
+  const { searchParams } = new URL(req.url, `http://${req.headers.get('host')}`)
   const fileType = searchParams.get('fileType');
   const extension = searchParams.get('ext');
   const fileName = `${uuidv4()}.${extension}`;

@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useMapEvents } from "react-leaflet";
 
-import GpxMap from './components/GpxMap';
+// import GpxMap from './components/GpxMap';
 import { parseGpxFile } from './utils/parseGPX';
 import { uploadToS3 } from './utils/s3Uploader';
 import { interpolateColor } from './utils/colorUtils';
@@ -104,6 +104,7 @@ export default function Home() {
   const [radius, setRadius] = useState<number>(15);
 
   const [points, setPoints] = useState([]);
+  const [lakeTracks, setLakeTracks] = useState<Record<number, any[]>>({});
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -148,6 +149,40 @@ export default function Home() {
       }
     }
   };
+
+  useEffect(() => {
+    lakes.forEach(lake => {
+      if (!lakeTracks[lake.id]) {
+        // Fetch the GPX media record for this lake from the API
+        fetch(`/api/media?lakeId=${lake.id}&type=application/gpx+xml`)
+          .then(res => {
+            if (!res.ok) {
+              throw new Error(`Failed to fetch media for lake ${lake.id}`);
+            }
+            return res.json();
+          })
+          .then(data => {
+            // Expecting data to be an array of media records
+            if (Array.isArray(data) && data.length > 0) {
+              const media = data[0];
+              if (media.url) {
+                return fetch(media.url);
+              }
+            }
+            throw new Error(`No GPX media found for lake ${lake.id}`);
+          })
+          .then(res => res.blob())
+          .then(blob => {
+            const file = new File([blob], 'temp.gpx', { type: 'application/gpx+xml' });
+            return parseGpxFile(file);
+          })
+          .then(pts => {
+            setLakeTracks(prev => ({ ...prev, [lake.id]: pts }));
+          })
+          .catch(err => console.error('Error loading GPX for lake', lake.id, err));
+      }
+    });
+  }, [lakes]);
 
   useEffect(() => {
     // Import Leaflet on the client side
@@ -336,6 +371,18 @@ export default function Home() {
                       );
                     })
                   }
+                  {Object.entries(lakeTracks).map(([lakeId, pts]) => (
+                    pts && pts.length > 0 && pts.slice(1).map((point, i) => {
+                      const prev = pts[i];
+                      return (
+                        <Polyline
+                          key={`lake-${lakeId}-line-${i}`}
+                          positions={[[prev.lat, prev.lon], [point.lat, point.lon]]}
+                          pathOptions={{ color: 'brown', weight: 4 }}
+                        />
+                      );
+                    })
+                  ))}
                   
                   {/* {points
                     .filter((p, i) => p.heading && i % 15 === 0)

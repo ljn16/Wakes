@@ -14,6 +14,31 @@ const prisma = new PrismaClient();
 //      lakeId: 1 // or whichever lake this track belongs to
 //    }
 
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = req.nextUrl;
+    const lakeId = searchParams.get("lakeId");
+    // Replace spaces with '+' in case the '+' gets converted to a space
+    const type = (searchParams.get("type") || "").replace(/ /g, "+");
+
+    const mediaRecords = await prisma.media.findMany({
+      where: {
+        lakeId: lakeId ? Number(lakeId) : undefined,
+        type: type || undefined,
+      }
+    });
+    console.log("Media records found:", mediaRecords);
+    if (mediaRecords.length > 0) {
+      console.log('Actual DB type is:', mediaRecords[0].type);
+    }
+
+    return NextResponse.json(mediaRecords, { status: 200 });
+  } catch (error) {
+    console.error("Error fetching media:", error);
+    return NextResponse.json({ error: 'Error fetching media records' }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
