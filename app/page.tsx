@@ -5,9 +5,15 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useMapEvents } from "react-leaflet";
 
-import placeholderImage from "./placeholder.png";
+import GpxMap from './components/GpxMap';
+import { parseGpxFile } from './utils/parseGPX';
+import { uploadToS3 } from './utils/s3Uploader';
+import { interpolateColor } from './utils/colorUtils';
+
 import lakePH from "./lakePH.jpg";
 import Image from "next/image";
+
+import Footer from "./Footer";
 
 // Dynamically import react-leaflet components with SSR disabled
 const MapContainer = dynamic(
@@ -29,6 +35,10 @@ const Circle = dynamic(
   () => import("react-leaflet").then((mod) => mod.Circle),
   { ssr: false }
 );
+const Polyline = dynamic(
+  () => import("react-leaflet").then((mod) => mod.Polyline),
+  { ssr: false }
+);
 
 interface Lake {
   id: number;
@@ -42,78 +52,9 @@ export default function Home() {
   const [currentLocation, setCurrentLocation] = useState<
     [number, number] | null
   >(null);
-  const [lakes, setLakes] = useState<Lake[]>([
-    {
-      id: 3,
-      name: "Lake of the Isles",
-      distance: "",
-      latitude: 44.955,
-      longitude: -93.3096,
-    },
-    {
-      id: 4,
-      name: "Medicine Lake",
-      distance: "",
-      latitude: 45.01,
-      longitude: -93.4192,
-    },
-    {
-      id: 5,
-      name: "Eagle Lake",
-      distance: "",
-      latitude: 45.0742,
-      longitude: -93.4148,
-    },
-    {
-      id: 6,
-      name: "White Bear Lake",
-      distance: "",
-      latitude: 45.075,
-      longitude: -92.987,
-    },
-    {
-      id: 7,
-      name: "Lake Phalen",
-      distance: "",
-      latitude: 44.9884,
-      longitude: -93.0545,
-    },
-    {
-      id: 8,
-      name: "Cedar Lake",
-      distance: "",
-      latitude: 44.9601,
-      longitude: -93.3205,
-    },
-    {
-      id: 9,
-      name: "Brownie Lake",
-      distance: "",
-      latitude: 44.9676,
-      longitude: -93.3243,
-    },
-    {
-      id: 10,
-      name: "Bde Maka Ska",
-      distance: "",
-      latitude: 44.942,
-      longitude: -93.3117,
-    },
-    {
-      id: 11,
-      name: "Lake Harriet",
-      distance: "",
-      latitude: 44.9223,
-      longitude: -93.3053,
-    },
-    {
-      id: 12,
-      name: "Minnehaha Creek",
-      distance: "",
-      latitude: 44.9532,
-      longitude: -93.4855,
-    },
-  ]);
+  const [lakes, setLakes] = useState<Lake[]>([]);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+  const [uploadedFileType, setUploadedFileType] = useState<string | null>(null);
 
   useEffect(() => {
     if (!currentLocation) return;
@@ -129,32 +70,84 @@ export default function Home() {
       const dLat = toRad(lat2 - lat1);
       const dLon = toRad(lon2 - lon1);
       const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.sin(dLat / 2) ** 2 +
         Math.cos(toRad(lat1)) *
           Math.cos(toRad(lat2)) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
+          Math.sin(dLon / 2) ** 2;
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c; // Distance in miles
     };
 
-    setLakes((prevLakes) =>
-      prevLakes.map((lake) => ({
-        ...lake,
-        distance: `${calculateDistance(
+    // Only update lakes if any distance has changed to avoid an infinite loop
+    setLakes((prevLakes) => {
+      let updated = false;
+      const newLakes = prevLakes.map((lake) => {
+        const newDistance = `${calculateDistance(
           currentLocation[0],
           currentLocation[1],
           lake.latitude,
           lake.longitude
-        ).toFixed(1)} mi`,
-      }))
-    );
-  }, [currentLocation]);
+        ).toFixed(1)} mi`;
+        if (lake.distance !== newDistance) {
+          updated = true;
+          return { ...lake, distance: newDistance };
+        }
+        return lake;
+      });
+      return updated ? newLakes : prevLakes;
+    });
+  }, [currentLocation, lakes]);
 
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
   const [L, setLeaflet] = useState<any>(null);
   const [radius, setRadius] = useState<number>(15);
+
+  const [points, setPoints] = useState([]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    for (const file of Array.from(files)) {
+      try {
+        let fileType = file.type;
+        if (!fileType && file.name.endsWith(".gpx")) {
+          fileType = "application/gpx+xml";
+        }
+        const url = await uploadToS3(file);
+        console.log("Uploaded to:", url);
+        setUploadedUrl(url);
+        setUploadedFileType(fileType);
+      
+        console.log("📤 Sending to API:", {
+          url,
+          type: fileType,
+          lakeId: null,
+          name: file.name,
+        });
+
+        // POST metadata to your API
+        await fetch("/api/media", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url,
+            type: fileType,
+            lakeId: null,
+            name: file.name,
+          }),
+        });
+
+        if (file.name.endsWith('.gpx')) {
+          const pts = await parseGpxFile(file);
+          setPoints(pts);
+        }
+      } catch (err) {
+        console.error("Failed to upload file:", file.name, err);
+      }
+    }
+  };
 
   useEffect(() => {
     // Import Leaflet on the client side
@@ -232,17 +225,7 @@ export default function Home() {
       },
     });
     return (
-      <div
-        style={{
-          position: "absolute",
-          bottom: "10px",
-          right: "10px",
-          background: "rgba(255,255,255,0.8)",
-          padding: "5px",
-          borderRadius: "5px",
-          zIndex: 1000,
-        }}
-      >
+      <div className="absolute bottom-1 right-1 bg-white/80 p-2 rounded-sm z-1000">
         {`Lat: ${coords.lat.toFixed(4)}, Lng: ${coords.lng.toFixed(4)}`}
       </div>
     );
@@ -250,6 +233,8 @@ export default function Home() {
 
   return (
     <>
+
+
       <div className="flex">
         <div className="h-screen w-full relative">
           {typeof window !== "undefined" && L ? (
@@ -288,22 +273,6 @@ export default function Home() {
                     </defs>
                   </svg>
 
-                  {/* <Circle
-                  center={currentLocation}
-                  radius={(radius * 1609.34) / 3} // half the outer circle's radius
-                  pathOptions={{ 
-                    stroke: false, 
-                    fillColor: 'url(#circleGradient)', 
-                  }}
-                />
-                <Circle
-                  center={currentLocation}
-                  radius={(radius * 1609.34) * 2/3} // half the outer circle's radius
-                  pathOptions={{ 
-                    stroke: false, 
-                    fillColor: 'url(#circleGradient)', 
-                  }}
-                /> */}
                   <Circle
                     center={currentLocation}
                     radius={(radius * 1609.34 * 1) / 2} // half the outer circle's radius
@@ -346,24 +315,87 @@ export default function Home() {
                 <Marker position={currentLocation} icon={lakeIcon}>
                   <Popup>You are here</Popup>
                 </Marker>
-              )}
-            </MapContainer>
+                  )}
+                  {points.length > 0 &&
+                    points.slice(1).map((point, i) => {
+                      const prev = points[i];
+                      const speed = point.speed ?? 0;
+                      const heading = point.heading;
+
+                      const color = interpolateColor(speed, 0, 5); // adjust range if needed
+
+                      return (
+                        <Polyline
+                          key={`line-${i}`}
+                          positions={[
+                            [prev.lat, prev.lon],
+                            [point.lat, point.lon],
+                          ]}
+                          pathOptions={{ color, weight: 4 }}
+                        />
+                      );
+                    })
+                  }
+                  
+                  {/* {points
+                    .filter((p, i) => p.heading && i % 15 === 0)
+                    .map((p, i) => (
+                      <Marker
+                        key={`arrow-${i}`}
+                        position={[p.lat, p.lon]}
+                        icon={L?.divIcon({
+                          html: `<div style="transform: rotate(${p.heading}deg); font-size: 16px;">➡️</div>`,
+                          iconSize: [20, 20],
+                          iconAnchor: [10, 10],
+                        })}
+                      />
+                    ))} */}
+                </MapContainer>
           ) : (
             <div className="flex justify-center items-center h-[500px]">
               <p className="text-gray-400">Loading map...</p>
             </div>
           )}
         </div>
+        {/* //????????????????????????//????????????????????????//????????????????????????//???????????????????????? */}
+        <div className="p-4 bg-white shadow-md z-50 fixed text-black left-0 top-0">
+        <label htmlFor="mediaUpload" className="block mb-2 font-semibold">Upload Image, Video, or GPX:</label>
+        <input
+          id="mediaUpload"
+          type="file"
+          multiple
+          accept=".jpg,.jpeg,.png,.mp4,.mov,.gpx"
+          onChange={handleFileUpload}
+          className="border rounded p-2"
+        />
+        {uploadedUrl && uploadedFileType && (
+          <div className="mt-4">
+            <p className="text-sm text-gray-600">Uploaded: {uploadedFileType}</p>
+            {uploadedFileType.startsWith('image') ? (
+              <div className="relative w-full h-60 mt-2 border">
+                <img src={uploadedUrl} alt="Preview" style={{ objectFit: "contain" }} />
+              </div>
+            ) : uploadedFileType.startsWith('video') ? (
+              <video src={uploadedUrl} controls className="w-full max-h-60 mt-2" />
+            ) : (
+              <p className="mt-2 text-sm italic text-gray-500">File uploaded.</p>
+            )}
+          </div>
+        )}
+      </div>
+        {/* //????????????????????????//????????????????????????//????????????????????????//???????????????????????? */}
+
+
         <div className="bg-white/3 backdrop-filter backdrop-blur-xs text-black text-center flex fixed top-7 right-7 z-50 p-2 rounded-md shadow-xl max-h-[50vh] md:max-h-11/12 overflow-auto">
           {/* Render list of lakes */}
           {loading ? (
             <p className="text-gray-400 text-center">Loading lakes...</p>
           ) : (
             <div className="flex flex-col items-center">
-              <div className="sticky top-0 z-50 bg-white rounded-md p-2">
+              <div className="sticky top-0 z-50 bg-gray-200 rounded-md p-2 w-full">
                 {/* <label htmlFor="radius">Search Radius </label> */}
                 <input
-                  className="cursor-pointer mx-2"
+                  className="cursor-pointer mx-2 align-middle"
                   id="radius"
                   type="range"
                   min="1"
@@ -376,16 +408,14 @@ export default function Home() {
               </div>
               <ul className="p-4 space-y-2">
                 {lakes
-                  .slice()
+                  .filter(lake => lake.distance)
                   .sort((a, b) => {
                     const distanceA = parseFloat(a.distance.split(" ")[0]);
                     const distanceB = parseFloat(b.distance.split(" ")[0]);
                     return distanceA - distanceB;
                   })
                   .map((lake) => {
-                    const lakeDistance = parseFloat(
-                      lake.distance.split(" ")[0]
-                    );
+                    const lakeDistance = parseFloat(lake.distance.split(" ")[0]);
                     return (
                       <li
                         key={lake.id}
@@ -412,9 +442,8 @@ export default function Home() {
           )}
         </div>
       </div>
-      <footer className="bg-white/35 text-gray-600 text-center flex fixed bottom-0 left-0 z-50 w-full overflow-auto justify-center">
-        <span className="bg-gradient-to-r from-white/0 via-white to-white/0 w-1/4">&copy; {new Date().getFullYear()} Wakes. All rights reserved.</span>
-      </footer>
+
+      < Footer />
     </>
   );
 }

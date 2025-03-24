@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+model Lake {
+  id        Int       @id @default(autoincrement())
+  name      String
+  latitude  Float
+  longitude Float
+  distance  Float?
+  media     Media[]   // relation to media files
+}
+
+model Media {
+  id       Int      @id @default(autoincrement())
+  name     String
+  type     String
+  url      String
+  lake     Lake?    @relation(fields: [lakeId], references: [id])
+  lakeId   Int?
+  createdAt DateTime @default(now())
+}
