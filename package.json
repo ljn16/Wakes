@@ -12,6 +12,7 @@
     "@aws-sdk/client-s3": "^3.758.0",
     "@prisma/client": "^6.5.0",
     "aws-sdk": "^2.1692.0",
+    "fast-xml-parser": "^5.0.9",
     "gpxparser": "^3.0.8",
     "leaflet": "^1.9.4",
     "next": "15.2.2",
