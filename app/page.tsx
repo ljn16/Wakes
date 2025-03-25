@@ -58,7 +58,7 @@ export default function Home() {
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [uploadedFileType, setUploadedFileType] = useState<string | null>(null);
   const [selectedLake, setSelectedLake] = useState<Lake | null>(null);
-  // const [isRouteLoading, setIsRouteLoading] = useState(false);
+  const [isRouteLoading, setIsRouteLoading] = useState(false);
 
   const gpxWorker = useRef<Worker | null>(null);
 
@@ -164,7 +164,9 @@ export default function Home() {
 
   useEffect(() => {
     if (!selectedLake || lakeTracks[selectedLake.id]) return;
-
+    
+    setIsRouteLoading(true);
+    
     fetch(`/api/media?lakeId=${selectedLake.id}&type=application/gpx+xml`)
       .then(res => {
         if (!res.ok) throw new Error(`Failed to fetch media for lake ${selectedLake.id}`);
@@ -185,7 +187,10 @@ export default function Home() {
       .then(pts => {
         setLakeTracks(prev => ({ ...prev, [selectedLake.id]: pts }));
       })
-      .catch(err => console.error('Error loading GPX for selected lake', selectedLake.id, err));
+      .catch(err => console.error('Error loading GPX for selected lake', selectedLake.id, err))
+      .finally(() => {
+        setIsRouteLoading(false);
+      });
   }, [selectedLake, lakeTracks]);
 
   useEffect(() => {
@@ -438,6 +443,9 @@ export default function Home() {
                 <li><strong>Distance:</strong> {selectedLake.distance}</li>
                 <li><strong>Latitude:</strong> {selectedLake.latitude}</li>
                 <li><strong>Longitude:</strong> {selectedLake.longitude}</li>
+                {isRouteLoading && (
+                  <li className="text-blue-500 mt-2 italic">Route loading...</li>
+                )}
               </ul>
               {/* <p></p>
               <p></p>
