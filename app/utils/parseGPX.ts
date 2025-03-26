@@ -36,8 +36,8 @@ export async function parseGpxFile(file: File) {
 
     const points = rawPoints.map((pt, i) => {
         const prev = rawPoints[i - 1];
-        let speed = null;
-        let heading = null;
+        let speed: number | null = null;
+        let heading: number | null = null;
 
         if (prev) {
             const dist = calculateDistance(prev.lat, prev.lon, pt.lat, pt.lon); // meters
