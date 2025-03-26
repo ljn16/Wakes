@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 
 // import tLakeData from '@/app/gpx-route-data/tempLakeData';
 
-// export const runtime = 'nodejs';
+export const runtime = 'nodejs';
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
 
 const prisma =
