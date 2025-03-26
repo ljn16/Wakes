@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.758.0",
@@ -19,7 +20,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-leaflet": "^5.0.0",
-    "react-map-gl": "^8.0.1"
+    "react-map-gl": "^8.0.1",
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
