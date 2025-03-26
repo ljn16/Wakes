@@ -91,7 +91,7 @@ export default function GpxMap({ points }: Props) {
   const progressPercent = (progressTime / 1000 / duration) * 100;
 
   // Draw colored route
-  const polylines = [];
+  const polylines: JSX.Element[] = [];
   for (let i = 1; i < points.length; i++) {
     const speed = points[i].speed ?? 0;
     const color = interpolateColor(speed, 0, 5); // adjust speed range if needed
