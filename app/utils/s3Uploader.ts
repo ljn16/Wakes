@@ -1,8 +1,11 @@
 export async function uploadToS3(file: File) {
     const ext = file.name.split('.').pop();
     const type = file.type || 'application/octet-stream';
-  
-    const res = await fetch(`/api/upload-url?fileType=${type}&ext=${ext}`);
+    const prefix =
+      type.includes('video') ? 'videos' :
+      type.includes('gpx') || ext?.toLowerCase() === 'gpx' ? 'gpx' :
+      'others';    
+    const res = await fetch(`/api/upload-url?fileType=${type}&ext=${ext}&prefix=${prefix}`);
     const { uploadUrl, fileName } = await res.json();
   
     // Perform the upload to S3

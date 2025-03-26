@@ -59,6 +59,9 @@ export default function Home() {
   const [uploadedFileType, setUploadedFileType] = useState<string | null>(null);
   const [selectedLake, setSelectedLake] = useState<Lake | null>(null);
   const [isRouteLoading, setIsRouteLoading] = useState(false);
+  const [lakeVideos, setLakeVideos] = useState<Record<number, string | null>>({});
+  const [videoProgress, setVideoProgress] = useState<number>(0);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const gpxWorker = useRef<Worker | null>(null);
 
@@ -163,35 +166,56 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (!selectedLake || lakeTracks[selectedLake.id]) return;
-    
-    setIsRouteLoading(true);
-    
-    fetch(`/api/media?lakeId=${selectedLake.id}&type=application/gpx+xml`)
-      .then(res => {
-        if (!res.ok) throw new Error(`Failed to fetch media for lake ${selectedLake.id}`);
-        return res.json();
-      })
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const media = data[0];
-          if (media.url) return fetch(media.url);
-        }
-        throw new Error(`No GPX media found for lake ${selectedLake.id}`);
-      })
-      .then(res => res.blob())
-      .then(blob => {
-        const file = new File([blob], 'temp.gpx', { type: 'application/gpx+xml' });
-        return parseGpxFile(file);
-      })
-      .then(pts => {
-        setLakeTracks(prev => ({ ...prev, [selectedLake.id]: pts }));
-      })
-      .catch(err => console.error('Error loading GPX for selected lake', selectedLake.id, err))
-      .finally(() => {
-        setIsRouteLoading(false);
-      });
-  }, [selectedLake, lakeTracks]);
+    if (!selectedLake) return;
+
+    const lakeId = selectedLake.id;
+
+    if (!lakeTracks[lakeId]) {
+      setIsRouteLoading(true);
+
+      fetch(`/api/media?lakeId=${lakeId}&type=application/gpx+xml`)
+        .then(res => {
+          if (!res.ok) throw new Error(`Failed to fetch media for lake ${lakeId}`);
+          return res.json();
+        })
+        .then(data => {
+          if (Array.isArray(data) && data.length > 0) {
+            const media = data[0];
+            if (media.url) return fetch(media.url);
+          }
+          throw new Error(`No GPX media found for lake ${lakeId}`);
+        })
+        .then(res => res.blob())
+        .then(blob => {
+          const file = new File([blob], 'temp.gpx', { type: 'application/gpx+xml' });
+          return parseGpxFile(file);
+        })
+        .then(pts => {
+          setLakeTracks(prev => ({ ...prev, [lakeId]: pts }));
+        })
+        .catch(err => console.error('Error loading GPX for selected lake', lakeId, err))
+        .finally(() => {
+          setIsRouteLoading(false);
+        });
+    }
+
+    if (!lakeVideos[lakeId]) {
+      fetch(`/api/media?lakeId=${lakeId}&type=video/mp4`)
+        .then(res => {
+          if (!res.ok) throw new Error(`Failed to fetch video for lake ${lakeId}`);
+          return res.json();
+        })
+        .then(data => {
+          if (Array.isArray(data) && data.length > 0) {
+            const media = data[0];
+            if (media.url) {
+              setLakeVideos(prev => ({ ...prev, [lakeId]: media.url }));
+            }
+          }
+        })
+        .catch(err => console.error('Error loading video for lake', lakeId, err));
+    }
+  }, [selectedLake, lakeTracks, lakeVideos]);
 
   useEffect(() => {
     // Import Leaflet on the client side
@@ -286,7 +310,7 @@ export default function Home() {
               ref={mapRef}
               center={currentLocation || [45.0, -93.0]}
               zoom={11}
-              className="w-full h-full relative z-10 rounded"
+              className="w-full h-full relative z-10 rounded cursor-grab"
               style={{ opacity: 0.95 }}
             >
               <TileLayer
@@ -387,24 +411,62 @@ export default function Home() {
                     })
                   }
                   {Object.entries(lakeTracks).map(([lakeId, pts]) => (
-                    // pts && pts.length > 0 && pts.slice(1).map((point, i) => {
-                    //   if (i % 2 !== 0) return null; // Show every 10th segment only
-                    //   const prev = pts[i];
-                    //   return (
-                    //     <Polyline
-                    //       key={`lake-${lakeId}-line-${i}`}
-                    //       positions={[[prev.lat, prev.lon], [point.lat, point.lon]]}
-                    //       pathOptions={{ color: 'brown', weight: 4 }}
-                    //     />
-                    //   );
-                    // })
                     pts && pts.length > 0 && (
-                      <Polyline
-                        key={`lake-${lakeId}`}
-                        // positions={pts.filter((_, i) => i % 2 === 0).map(p => [p.lat, p.lon])}
-                        positions={pts.map(p => [p.lat, p.lon])}
-                        pathOptions={{ color: 'brown', weight: 4 }}
-                      />
+                      <>
+                        <Polyline
+                          key={`lake-${lakeId}`}
+                          positions={pts.map(p => [p.lat, p.lon])}
+                          pathOptions={{ color: 'brown', weight: 4 }}
+                        />
+                        {videoProgress > 0 &&
+                          Number(lakeId) === selectedLake?.id &&
+                          pts.length > 0 &&
+                          (() => {
+  const exactIndex = videoProgress * (pts.length - 1);
+  const index = Math.floor(exactIndex);
+  const nextIndex = Math.min(index + 1, pts.length - 1);
+  const t = exactIndex - index;
+
+  const start = pts[index];
+  const end = pts[nextIndex];
+
+  const lat = start.lat + (end.lat - start.lat) * t;
+  const lon = start.lon + (end.lon - start.lon) * t;
+  const heading = start.heading ?? 0;
+  const speed = start.speed ?? 0;
+  const time = (videoProgress * (videoRef.current?.duration ?? 0)).toFixed(1);
+
+  const trail = pts.slice(Math.max(index - 10, 0), index + 1).map(p => [p.lat, p.lon]);
+
+  return (
+    <>
+      <Polyline
+        positions={trail}
+        pathOptions={{ color: 'red', weight: 2, opacity: 0.5 }}
+      />
+      <Marker
+        key={`video-marker-${lakeId}`}
+        position={[lat, lon]}
+        icon={L?.divIcon({
+          html: `<div style="transform: rotate(${heading}deg); font-size: 16px;">➡️</div>`,
+          className: 'transparent-icon',
+          iconSize: [20, 20],
+          iconAnchor: [10, 10],
+          bgPos: [0, 0],
+        })}
+      >
+        {/* <Popup open>
+          <div>
+            <strong>Time:</strong> {time}s<br />
+            <strong>Speed:</strong> {speed.toFixed(1)} m/s
+          </div>
+        </Popup> */}
+      </Marker>
+    </>
+  );
+})()
+                        }
+                      </>
                     )
                   ))}
                   
@@ -429,9 +491,9 @@ export default function Home() {
             </div>
           )}
           {selectedLake && (
-            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/95 p-4 rounded shadow-lg z-[1000] w-80 border border-gray-300 text-black">
+            <div className="absolute top-4 left-4 bg-white/3 backdrop-filter backdrop-blur-xs p-2 rounded shadow-lg z-[1000] text-black">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-lg font-semibold">{selectedLake.name}</h2>
+                <h2 className="text-lg font-semibold">{selectedLake.name}&nbsp;&nbsp;<span className="font-normal text-sm">{selectedLake.distance}</span></h2>
                 <button
                   onClick={() => setSelectedLake(null)}
                   className="text-gray-500 hover:text-black cursor-pointer"
@@ -440,13 +502,75 @@ export default function Home() {
                 </button>
               </div>
               <ul className="">
-                <li><strong>Distance:</strong> {selectedLake.distance}</li>
-                <li><strong>Latitude:</strong> {selectedLake.latitude}</li>
-                <li><strong>Longitude:</strong> {selectedLake.longitude}</li>
                 {isRouteLoading && (
                   <li className="text-blue-500 mt-2 italic">Route loading...</li>
                 )}
+                <li>Route distance: {(() => {
+                  const route = lakeTracks[selectedLake.id] || points;
+                  if (!route || route.length < 2) return "N/A";
+                  const toRad = (value: number) => (value * Math.PI) / 180;
+                  let distance = 0;
+                  for (let i = 1; i < route.length; i++) {
+                  const lat1 = route[i - 1].lat;
+                  const lon1 = route[i - 1].lon;
+                  const lat2 = route[i].lat;
+                  const lon2 = route[i].lon;
+                  const dLat = toRad(lat2 - lat1);
+                  const dLon = toRad(lon2 - lon1);
+                  const a =
+                    Math.sin(dLat / 2) ** 2 +
+                    Math.cos(toRad(lat1)) *
+                    Math.cos(toRad(lat2)) *
+                    Math.sin(dLon / 2) ** 2;
+                  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                  distance += 3958.8 * c; // distance in miles
+                  }
+                  return `${distance.toFixed(2)} mi`;
+                })()}</li>
+                <li className="mt-2">
+                    <a
+                    href={`https://fishing-app.gpsnauticalcharts.com/i-boating-fishing-web-app/fishing-marine-charts-navigation.html?title=${encodeURIComponent(
+                      selectedLake.name + ", LAKE boating app"
+                    )}#15.22/${selectedLake.latitude}/${selectedLake.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline flex items-center gap-1"
+                    >
+                    View depth map
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="w-4 h-4"
+                    >
+                      <path
+                      transform="rotate(-90 12 12)"
+                      d="M5.5 18.5a.75.75 0 000 1.5h12a.75.75 0 00.75-.75v-12a.75.75 0 00-1.5 0v10.19L6.28 6.28a.75.75 0 00-1.06 1.06l10.19 10.19H5.5z"
+                      />
+                    </svg>
+                    </a>
+                </li>
               </ul>
+
+              {lakeVideos[selectedLake.id] && (
+                <div className="mt-2 bg-black rounded overflow-hidden z-[1100]">
+                  <video
+                    ref={videoRef}
+                    src={lakeVideos[selectedLake.id]!}
+                    controls
+                    className="w-full aspect-video max-h-96"
+                    onTimeUpdate={(e) => {
+                      const current = e.currentTarget.currentTime;
+                      const duration = e.currentTarget.duration;
+                      if (duration > 0) {
+                        setVideoProgress(current / duration);
+                      }
+                    }}
+                    onError={() => console.error('Error loading video:', lakeVideos[selectedLake.id])}
+                  />
+                </div>
+              )}
+              {/* <pre className="text-xs break-words">{JSON.stringify(lakeVideos[selectedLake.id])}</pre> */}
               {/* <p></p>
               <p></p>
               <p></p> */}
@@ -454,7 +578,7 @@ export default function Home() {
             </div>
           )}
         </div>
-        {/* //????????????????????????//????????????????????????//????????????????????????//???????????????????????? */}
+        {/* //? UPLOAD DATA (img, mp4, gpx) ????????????????????????//????????????????????????//????????????????????????//???????????????????????? */}
         <div className="p-4 bg-white/3 backdrop-filter backdrop-blur-xs text-black shadow-md z-50 fixed text-xs left-14 top-4 rounded">
         <label htmlFor="mediaUpload" className="block mb-2 font-semibold">Upload Image, Video, or GPX:</label>
         <input
@@ -480,7 +604,7 @@ export default function Home() {
           </div>
         )}
       </div>
-        {/* //????????????????????????//????????????????????????//????????????????????????//???????????????????????? */}
+        {/* //? SEARCH RADIUS ????????????????????????//????????????????????????//????????????????????????//???????????????????????? */}
 
 
         <div className="bg-white/3 backdrop-filter backdrop-blur-xs text-black text-center flex fixed top-7 right-7 z-50 p-2 rounded-md shadow-xl max-h-[50vh] md:max-h-11/12 overflow-auto">
@@ -489,7 +613,7 @@ export default function Home() {
             <p className="text-gray-400 text-center">Loading lakes...</p>
           ) : (
             <div className="flex flex-col items-center">
-              <div className="sticky top-0 z-50 bg-gray-200 rounded-md p-2 w-full">
+              <div className="sticky top-0 z-50 bg-gray-200 rounded-md p-2 w-full ">
                 {/* <label htmlFor="radius">Search Radius </label> */}
                 <input
                   className="cursor-pointer mx-2 align-middle"
@@ -522,7 +646,7 @@ export default function Home() {
                           }
                           setSelectedLake(lake);
                         }}
-                        className=" flex cursor-pointer border border-black/20 p-2 rounded hover:border-blue-800/45 hover:bg-blue-400/10 transition-colors"
+                      className={`flex cursor-pointer border border-black/20 p-2 rounded hover:border-blue-800/45  ${selectedLake?.id === lake.id ? "hover:bg-blue-600/25" : ""} transition-colors ${selectedLake?.id === lake.id ? "bg-blue-600/25" : ""}`}
                         style={{ opacity: lakeDistance > radius ? 0.5 : 1 }}
                       >
                         <span className="h-20 w-20 bg-amber-400 mr-2">
@@ -546,6 +670,16 @@ export default function Home() {
       </div>
 
       < Footer />
+      <style jsx global>{`
+        .transparent-icon {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+        }
+        .leaflet-container {
+          cursor: grab;
+        }
+      `}</style>
     </>
   );
 }

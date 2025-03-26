@@ -17,7 +17,8 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url, `http://${req.headers.get('host')}`)
   const fileType = searchParams.get('fileType');
   const extension = searchParams.get('ext');
-  const fileName = `${uuidv4()}.${extension}`;
+  const prefix = searchParams.get('prefix') || '';
+  const fileName = `${prefix}/${uuidv4()}.${extension}`;
 
   const s3Params = {
     Bucket: process.env.S3_BUCKET_NAME!,
