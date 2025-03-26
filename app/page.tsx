@@ -114,14 +114,12 @@ export default function Home() {
   }, [currentLocation, lakes]);
 
   const [loading, setLoading] = useState<boolean>(true);
-  const router = useRouter();
-  const [L, setLeaflet] = useState<any>(null);
+  const [L, setLeaflet] = useState<typeof import("leaflet") | null>(null);
   const [radius, setRadius] = useState<number>(15);
 
   const [points, setPoints] = useState([]);
   const [lakeTracks, setLakeTracks] = useState<Record<number, any[]>>({});
-  const mapRef = useRef<any>(null);
-
+  const mapRef = useRef<L.Map | null>(null);
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -397,7 +395,6 @@ export default function Home() {
                     points.slice(1).map((point, i) => {
                       const prev = points[i];
                       const speed = point.speed ?? 0;
-                      const heading = point.heading;
 
                       const color = interpolateColor(speed, 0, 5); // adjust range if needed
 
@@ -437,8 +434,7 @@ export default function Home() {
   const lat = start.lat + (end.lat - start.lat) * t;
   const lon = start.lon + (end.lon - start.lon) * t;
   const heading = start.heading ?? 0;
-  const speed = start.speed ?? 0;
-  const time = (videoProgress * (videoRef.current?.duration ?? 0)).toFixed(1);
+
 
   const trail = pts.slice(Math.max(index - 10, 0), index + 1).map(p => [p.lat, p.lon]);
 
@@ -601,7 +597,7 @@ export default function Home() {
                   />
                 </div>
               )}
-              
+
             </div>
           )}
         </div>
