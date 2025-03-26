@@ -61,6 +61,7 @@ export default function Home() {
   const [isRouteLoading, setIsRouteLoading] = useState(false);
   const [lakeVideos, setLakeVideos] = useState<Record<number, string | null>>({});
   const [videoProgress, setVideoProgress] = useState<number>(0);
+  const [locationError, setLocationError] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const gpxWorker = useRef<Worker | null>(null);
@@ -253,6 +254,8 @@ export default function Home() {
         },
         (error) => {
           console.error("Error getting location:", error);
+          setCurrentLocation(null);
+          setLocationError(true);
           fetchLakes();
         }
       );
@@ -411,7 +414,8 @@ export default function Home() {
                     })
                   }
                   {Object.entries(lakeTracks).map(([lakeId, pts]) => (
-                    pts && pts.length > 0 && (
+                    // pts && pts.length > 0 && (
+                    pts && pts.length > 0 && Number(lakeId) === selectedLake?.id && (
                       <>
                         <Polyline
                           key={`lake-${lakeId}`}
@@ -527,6 +531,33 @@ export default function Home() {
                   }
                   return `${distance.toFixed(2)} mi`;
                 })()}</li>
+                <li>
+                  Estimated Time: {(() => {
+                    const route = lakeTracks[selectedLake.id] || points;
+                    if (!route || route.length < 2) return "N/A";
+                    const toRad = (value: number) => (value * Math.PI) / 180;
+                    let distance = 0;
+                    for (let i = 1; i < route.length; i++) {
+                      const lat1 = route[i - 1].lat;
+                      const lon1 = route[i - 1].lon;
+                      const lat2 = route[i].lat;
+                      const lon2 = route[i].lon;
+                      const dLat = toRad(lat2 - lat1);
+                      const dLon = toRad(lon2 - lon1);
+                      const a =
+                        Math.sin(dLat / 2) ** 2 +
+                        Math.cos(toRad(lat1)) *
+                          Math.cos(toRad(lat2)) *
+                          Math.sin(dLon / 2) ** 2;
+                      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                      distance += 3958.8 * c;
+                    }
+                    const hours = distance / 3;
+                    const wholeHours = Math.floor(hours);
+                    const minutes = Math.round((hours - wholeHours) * 60);
+                    return `${wholeHours}h ${minutes}m`;
+                  })()}
+                </li>
                 <li className="mt-2">
                     <a
                     href={`https://fishing-app.gpsnauticalcharts.com/i-boating-fishing-web-app/fishing-marine-charts-navigation.html?title=${encodeURIComponent(
@@ -570,11 +601,7 @@ export default function Home() {
                   />
                 </div>
               )}
-              {/* <pre className="text-xs break-words">{JSON.stringify(lakeVideos[selectedLake.id])}</pre> */}
-              {/* <p></p>
-              <p></p>
-              <p></p> */}
-
+              
             </div>
           )}
         </div>
@@ -610,9 +637,12 @@ export default function Home() {
         <div className="bg-white/3 backdrop-filter backdrop-blur-xs text-black text-center flex fixed top-7 right-7 z-50 p-2 rounded-md shadow-xl max-h-[50vh] md:max-h-11/12 overflow-auto">
           {/* Render list of lakes */}
           {loading ? (
-            <p className="text-gray-400 text-center">Loading lakes...</p>
+            <p className="text-gray-600 text-center">Loading lakes...</p>
           ) : (
-            <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center">
+              {locationError && (
+                <p className="text-red-600 text-sm mb-2">⚠️ Location not found. Showing all lakes.</p>
+              )}
               <div className="sticky top-0 z-50 bg-gray-200 rounded-md p-2 w-full ">
                 {/* <label htmlFor="radius">Search Radius </label> */}
                 <input
@@ -629,14 +659,12 @@ export default function Home() {
               </div>
               <ul className="p-4 space-y-2">
                 {lakes
-                  .filter(lake => lake.distance)
                   .sort((a, b) => {
-                    const distanceA = parseFloat(a.distance.split(" ")[0]);
-                    const distanceB = parseFloat(b.distance.split(" ")[0]);
+                    const distanceA = a.distance ? parseFloat(a.distance.split(" ")[0]) : Infinity;
+                    const distanceB = b.distance ? parseFloat(b.distance.split(" ")[0]) : Infinity;
                     return distanceA - distanceB;
                   })
                   .map((lake) => {
-                    const lakeDistance = parseFloat(lake.distance.split(" ")[0]);
                     return (
                       <li
                         key={lake.id}
@@ -646,8 +674,8 @@ export default function Home() {
                           }
                           setSelectedLake(lake);
                         }}
-                      className={`flex cursor-pointer border border-black/20 p-2 rounded hover:border-blue-800/45  ${selectedLake?.id === lake.id ? "hover:bg-blue-600/25" : ""} transition-colors ${selectedLake?.id === lake.id ? "bg-blue-600/25" : ""}`}
-                        style={{ opacity: lakeDistance > radius ? 0.5 : 1 }}
+                        className={`flex cursor-pointer border border-black/20 p-2 rounded hover:border-blue-800/45  ${selectedLake?.id === lake.id ? "hover:bg-blue-600/25" : ""} transition-colors ${selectedLake?.id === lake.id ? "bg-blue-600/25" : ""}`}
+                        style={{ opacity: lake.distance && parseFloat(lake.distance) > radius ? 0.5 : 1 }}
                       >
                         <span className="h-20 w-20 bg-amber-400 mr-2">
                           <Image
