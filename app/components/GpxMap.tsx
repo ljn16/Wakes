@@ -49,7 +49,7 @@ export default function GpxMap({ points }: Props) {
     } else {
       clearInterval(intervalRef.current!);
     }
-  }, [isPlaying, currentIndex]);
+  }, [isPlaying, currentIndex, points.length]);
 
   function findClosestPointIndex(currentSeconds: number) {
     const start = new Date(points[0].time).getTime();
@@ -85,7 +85,6 @@ export default function GpxMap({ points }: Props) {
 
   if (!points.length) return null;
 
-  const path: LatLngExpression[] = points.map((p) => [p.lat, p.lon]);
   const center: LatLngExpression = [points[0].lat, points[0].lon];
   const progressTime = new Date(points[currentIndex].time).getTime() - new Date(points[0].time).getTime();
   const progressPercent = (progressTime / 1000 / duration) * 100;
@@ -141,8 +140,12 @@ export default function GpxMap({ points }: Props) {
         <Marker position={[currentPoint.lat, currentPoint.lon]}>
           <Popup>{new Date(currentPoint.time).toLocaleTimeString()}</Popup>
         </Marker>
-      </MapContainer>
-
+        </MapContainer>
+        
+        <div style={{ height: '10px', width: '100%', background: '#ccc', marginTop: '0.5rem', borderRadius: '5px' }}>
+          <div style={{ height: '100%', width: `${progressPercent}%`, background: '#0f0', borderRadius: '5px' }} />
+        </div>
+      
       {/* Playback Controls */}
       <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <button onClick={() => setIsPlaying((p) => !p)}>

@@ -2,7 +2,7 @@
 import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useState, useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { useMapEvents } from "react-leaflet";
 
 // import GpxMap from './components/GpxMap';
