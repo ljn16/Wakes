@@ -4,7 +4,15 @@ import { PrismaClient } from '@prisma/client';
 // import tLakeData from '@/app/gpx-route-data/tempLakeData';
 
 // export const runtime = 'nodejs';
-const prisma = new PrismaClient();
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
+
+const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: ['query'],
+  });
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 // export async function GET() { return Response.json(tLakeData, { status: 200 });} //*temp GET backup
 //*GET
@@ -48,5 +56,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to create lake' }, { status: 500 });
   }
 }
-
-
