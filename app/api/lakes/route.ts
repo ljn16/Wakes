@@ -39,7 +39,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(lakes, { status: 200 });
   } catch (error) {
-    console.error('Error in GET /api/lakes:', error);
+    console.error('Error in GET /api/lakes:', error instanceof Error ? error.message : error);
+    console.error('Full error object:', error);
     return NextResponse.json({ error: 'Failed to load lakes' }, { status: 500 });
   }
 }
