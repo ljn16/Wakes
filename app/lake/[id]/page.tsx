@@ -1,5 +1,10 @@
-export default function LakePage() {
-    return <p>Coming soon...</p>;
+export default function LakeDetailsPage() {
+    return (
+      <div>
+        <h1>Lake Details</h1>
+        <p>This page is under construction.</p>
+      </div>
+    );
   }
 // "use client";
 // import dynamic from "next/dynamic";
