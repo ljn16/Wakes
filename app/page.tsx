@@ -117,7 +117,16 @@ export default function Home() {
   const [L, setLeaflet] = useState<typeof import("leaflet") | null>(null);
   const [radius, setRadius] = useState<number>(15);
 
-  const [points, setPoints] = useState([]);
+  interface GpxPoint {
+    lat: number;
+    lon: number;
+    ele: number;
+    time: Date;
+    speed: number | null;
+    heading: number | null;
+  }
+  
+  const [points, setPoints] = useState<GpxPoint[]>([]);
   const [lakeTracks, setLakeTracks] = useState<Record<number, any[]>>({});
   const mapRef = useRef<L.Map | null>(null);
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
