@@ -1,3 +1,6 @@
+export default function LakePage() {
+    return <p>Coming soon...</p>;
+  }
 // "use client";
 // import dynamic from "next/dynamic";
 // import "leaflet/dist/leaflet.css";
