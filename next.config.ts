@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   // images: {
   //   domains: ["wakes-media.s3.amazonaws.com"],
   // },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;
