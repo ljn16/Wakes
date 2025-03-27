@@ -14,6 +14,8 @@ const prisma =
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
+console.log("DATABASE_URL:", process.env.DATABASE_URL); // Log DATABASE_URL
+
 // export async function GET() { return Response.json(tLakeData, { status: 200 });} //*temp GET backup
 //*GET
 export async function GET(req: NextRequest) {
@@ -23,6 +25,7 @@ export async function GET(req: NextRequest) {
     const longitude = parseFloat(searchParams.get('longitude') || '');
 
     let lakes;
+    console.log("DATABASE_URL:", process.env.DATABASE_URL); // Log DATABASE_URL
     if (!isNaN(latitude) && !isNaN(longitude)) {
       lakes = await prisma.lake.findMany({
         // where: {
