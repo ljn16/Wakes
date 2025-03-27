@@ -15,7 +15,6 @@ import Image from "next/image";
 
 import Footer from "./Footer";
 
-
 // Dynamically import react-leaflet components with SSR disabled
 const MapContainer = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
