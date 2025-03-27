@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { RefObject, useState, useRef } from "react";
+import { RefObject, useState, useRef, useEffect } from "react";
 import lakePH from "../lakePH.jpg";
 import { Map as LeafletMap } from "leaflet";
 
@@ -36,6 +36,15 @@ export default function LakeSidebar({
   const [sidebarHeight, setSidebarHeight] = useState(200);
   const startYRef = useRef<number | null>(null);
   const startHeightRef = useRef<number>(200);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const draggingRef = useRef(false);
+  const offsetRef = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth >= 768) {
+      setSidebarHeight(window.innerHeight * 0.9);
+    }
+  }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     startYRef.current = e.touches[0].clientY;
@@ -50,15 +59,51 @@ export default function LakeSidebar({
     }
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (window.innerWidth >= 768) {
+      draggingRef.current = true;
+      offsetRef.current = {
+        x: e.clientX - position.x,
+        y: e.clientY - position.y,
+      };
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (draggingRef.current && window.innerWidth >= 768) {
+      setPosition({
+        x: e.clientX - offsetRef.current.x,
+        y: e.clientY - offsetRef.current.y,
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    draggingRef.current = false;
+  };
+
+  useEffect(() => {
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
+
   return (
     <div
-      className="bg-white/3 backdrop-filter backdrop-blur-xs text-black text-center justify-centerflex fixed bottom-0 left-0 md:left-auto md:bottom-7 md:top-7 right-1 md:right-7 z-50 rounded-md shadow-xl overflow-auto md:w-1/5 "
-      style={{ height: `${sidebarHeight}px` }}
+      className="bg-white/3 backdrop-filter backdrop-blur-xs text-black text-center justify-centerflex fixed bottom-0 left-0 md:left-auto md:bottom-7 md:top-7 right-1 md:right-7 z-50 rounded-md shadow-xl overflow-auto md:w-1/5 md:h-3/4"
+      onMouseDown={handleMouseDown}
+      style={{
+        height: `${sidebarHeight}px`,
+        transform: `translate(${position.x}px, ${position.y}px)`,
+      }}
     >
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
-        className="w-full h-4 cursor-row-resize touch-none bg-gray-300 rounded-t-md"
+        className="w-full h-4 cursor-grab touch-none bg-gray-300 rounded-t-md"
       >
         <div className="mx-auto w-12 h-1 bg-gray-500 rounded mt-1"></div>
       </div>
@@ -73,7 +118,7 @@ export default function LakeSidebar({
             </p>
           )}
 
-          <div className="sticky top-0 z-50 bg-gray-200 rounded-md p-2 w-full">
+          <div className="sticky top-0 z-50 bg-gray-200 rounded-b-md p-2 w-full">
             <input
               className="cursor-pointer mx-2 align-middle"
               id="radius"
