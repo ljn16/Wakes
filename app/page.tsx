@@ -5,10 +5,9 @@ import "leaflet/dist/leaflet.css";
 import { useEffect, useState, useRef } from "react";
 
 //* UTILS *//
-// import GpxMap from './components/GpxMap';
 import { parseGpxFile } from './utils/parseGPX';
 import { uploadToS3 } from './utils/s3Uploader';
-// import { interpolateColor } from './utils/colorUtils';
+import { calculateDistance } from './utils/distanceUtils'; // Import calculateDistance
 
 //* COMPONENTS *//
 import Footer from "./components/Footer";
@@ -49,25 +48,6 @@ export default function Home() {
 
   useEffect(() => {
     if (!currentLocation) return;
-
-    const calculateDistance = (
-      lat1: number,
-      lon1: number,
-      lat2: number,
-      lon2: number
-    ) => {
-      const toRad = (value: number) => (value * Math.PI) / 180;
-      const R = 3958.8; // Radius of the Earth in miles
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos(toRad(lat1)) *
-          Math.cos(toRad(lat2)) *
-          Math.sin(dLon / 2) ** 2;
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c; // Distance in miles
-    };
 
     // Only update lakes if any distance has changed to avoid an infinite loop
     setLakes((prevLakes) => {
