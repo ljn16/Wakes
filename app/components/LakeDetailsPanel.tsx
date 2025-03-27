@@ -95,7 +95,7 @@ export default function LakeDetailsPanel({
           <a
             href={`https://fishing-app.gpsnauticalcharts.com/i-boating-fishing-web-app/fishing-marine-charts-navigation.html?title=${encodeURIComponent(
               selectedLake.name + ", LAKE boating app"
-            )}#15.22/${selectedLake.latitude}/${selectedLake.longitude}`}
+            )}#15/${selectedLake.latitude}/${selectedLake.longitude}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 underline flex items-center gap-1"
