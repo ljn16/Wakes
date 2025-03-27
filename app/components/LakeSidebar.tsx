@@ -15,9 +15,9 @@ interface Lake {
 interface Props {
   lakes: Lake[];
   radius: number;
-  setRadius: (r: number) => void;
+  setRadiusAction: (r: number) => void;
   selectedLake: Lake | null;
-  setSelectedLake: (lake: Lake) => void;
+  setSelectedLakeAction: (lake: Lake) => void;
   mapRef: RefObject<LeafletMap | null>;
   loading: boolean;
   locationError: boolean;
@@ -26,9 +26,9 @@ interface Props {
 export default function LakeSidebar({
   lakes,
   radius,
-  setRadius,
+  setRadiusAction,
   selectedLake,
-  setSelectedLake,
+  setSelectedLakeAction,
   mapRef,
   loading,
   locationError,
@@ -53,7 +53,7 @@ export default function LakeSidebar({
               max="50"
               step="1"
               value={radius}
-              onChange={(e) => setRadius(Number(e.target.value))}
+              onChange={(e) => setRadiusAction(Number(e.target.value))}
             />
             <span>{radius} mi</span>
           </div>
@@ -75,7 +75,7 @@ export default function LakeSidebar({
                         { animate: true }
                       );
                     }
-                    setSelectedLake(lake);
+                    setSelectedLakeAction(lake);
                   }}
                   className={`flex cursor-pointer border border-black/20 p-2 rounded hover:border-blue-800/45 ${
                     selectedLake?.id === lake.id

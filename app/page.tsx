@@ -265,9 +265,9 @@ export default function Home() {
         <LakeSidebar
           lakes={lakes}
           radius={radius}
-          setRadius={setRadius}
+          setRadiusAction={setRadius}
           selectedLake={selectedLake}
-          setSelectedLake={setSelectedLake}
+          setSelectedLakeAction={setSelectedLake}
           mapRef={mapRef}
           loading={loading}
           locationError={locationError}
