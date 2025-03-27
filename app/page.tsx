@@ -1,47 +1,22 @@
 "use client";
-import dynamic from "next/dynamic";
-import "leaflet/dist/leaflet.css";
-import { useEffect, useState, useMemo, useRef } from "react";
-// import { useRouter } from "next/navigation";
-import { useMapEvents } from "react-leaflet";
 
+//* LIBRARIES *//
+import "leaflet/dist/leaflet.css";
+import { useEffect, useState, useRef } from "react";
+
+//* UTILS *//
 // import GpxMap from './components/GpxMap';
 import { parseGpxFile } from './utils/parseGPX';
 import { uploadToS3 } from './utils/s3Uploader';
-import { interpolateColor } from './utils/colorUtils';
+// import { interpolateColor } from './utils/colorUtils';
 
-
-
+//* COMPONENTS *//
 import Footer from "./components/Footer";
 import LakeSidebar from "./components/LakeSidebar";
 import MapContainerWrapper from "./components/MapContainerWrapper";
 import LakeDetailsPanel from "./components/LakeDetailsPanel";
 import UploadPanel from "./components/UploadPanel";
 
-// Dynamically import react-leaflet components with SSR disabled
-const MapContainer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-const TileLayer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.TileLayer),
-  { ssr: false }
-);
-const Marker = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Marker),
-  { ssr: false }
-);
-const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), {
-  ssr: false,
-});
-const Circle = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Circle),
-  { ssr: false }
-);
-const Polyline = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Polyline),
-  { ssr: false }
-);
 
 interface Lake {
   id: number;
@@ -271,32 +246,6 @@ export default function Home() {
       fetchLakes();
     }
   }, []);
-
-  const lakeIcon = useMemo(() => {
-    if (L) {
-      return L.divIcon({
-        html: `<div style="background: #2ecc71; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>`,
-        className: "",
-        iconSize: [24, 24],
-        iconAnchor: [12, 12],
-      });
-    }
-    return null;
-  }, [L]);
-
-  const blueIcon = useMemo(() => {
-    if (L) {
-      return L.divIcon({
-        html: `<div style="background: #3498db; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>`,
-        className: "",
-        iconSize: [24, 24],
-        iconAnchor: [12, 12],
-      });
-    }
-    return null;
-  }, [L]);
-
-
 
   return (
     <>

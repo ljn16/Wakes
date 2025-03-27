@@ -20,7 +20,7 @@ interface Props {
   lakeTracks: Record<number, GpxPoint[]>;
   points: GpxPoint[];
   lakeVideos: Record<number, string | null>;
-  videoRef: RefObject<HTMLVideoElement>;
+  videoRef: RefObject<HTMLVideoElement | null>
   videoProgress: number;
   setVideoProgress: (value: number) => void;
   isRouteLoading: boolean;
@@ -33,7 +33,7 @@ export default function LakeDetailsPanel({
   points,
   lakeVideos,
   videoRef,
-  videoProgress,
+//   videoProgress,
   setVideoProgress,
   isRouteLoading,
 }: Props) {
