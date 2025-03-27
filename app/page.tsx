@@ -5,17 +5,17 @@ import "leaflet/dist/leaflet.css";
 import { useEffect, useState, useRef } from "react";
 
 //* UTILS *//
-import { parseGpxFile } from "../utils/parseGPX";
-import { uploadToS3 } from "../utils/s3Uploader";
-import { calculateDistance } from "../utils/distanceUtils";
+import { parseGpxFile } from "./utils/parseGPX";
+import { uploadToS3 } from "./utils/s3Uploader";
+import { calculateDistance } from "./utils/distanceUtils";
 
 //* COMPONENTS *//
-import Footer from "../components/Footer";
-import LakeSidebar from "../components/LakeSidebar";
-import MapContainerWrapper from "../components/MapContainerWrapper";
-import LakeDetailsPanel from "../components/LakeDetailsPanel";
-import UploadPanel from "../components/UploadPanel";
-import Account from "../components/Account";
+import Footer from "./components/Footer";
+import LakeSidebar from "./components/LakeSidebar";
+import MapContainerWrapper from "./components/MapContainerWrapper";
+import LakeDetailsPanel from "./components/LakeDetailsPanel";
+import UploadPanel from "./components/UploadPanel";
+import Account from "./components/Account";
 
 interface Lake {
   id: number;
