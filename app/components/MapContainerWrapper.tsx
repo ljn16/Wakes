@@ -41,18 +41,6 @@ interface Props {
   radius: number;
 }
 
-function MouseCoordinates() {
-  const [coords, setCoords] = useState({ lat: 0, lng: 0 });
-  useMapEvents({
-    mousemove: (e) => setCoords(e.latlng),
-  });
-  return (
-    <div className="hidden md:block absolute bottom-1 right-1 bg-white/80 p-2 rounded-sm z-1000">
-      {`Lat: ${coords.lat.toFixed(4)}, Lng: ${coords.lng.toFixed(4)}`}
-    </div>
-  );
-}
-
 export default function MapContainerWrapper({
   currentLocation,
   lakes,
@@ -82,7 +70,6 @@ export default function MapContainerWrapper({
   if (typeof window === "undefined" || !L) {
     return <div className="flex justify-center items-center h-[500px]"><p className="text-gray-400">Loading map...</p></div>;
   }
-
 
   function MouseCoordinates() {
     const [coords, setCoords] = useState({ lat: 0, lng: 0 });
@@ -180,7 +167,9 @@ export default function MapContainerWrapper({
           const lat = start.lat + (end.lat - start.lat) * t;
           const lon = start.lon + (end.lon - start.lon) * t;
           const heading = start.heading ?? 0;
-          const trail = pts.slice(Math.max(index - 10, 0), index + 1).map(p => [p.lat, p.lon]);
+          const trail: [number, number][] = pts.slice(Math.max(index - 10, 0), index + 1).map(
+            (p) => [p.lat, p.lon] as [number, number]
+          );
 
           return (
             <>
