@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { RefObject } from "react";
+import { RefObject, useState, useRef } from "react";
 import lakePH from "../lakePH.jpg";
 import { Map as LeafletMap } from "leaflet";
 
@@ -33,10 +33,38 @@ export default function LakeSidebar({
   loading,
   locationError,
 }: Props) {
+  const [sidebarHeight, setSidebarHeight] = useState(200);
+  const startYRef = useRef<number | null>(null);
+  const startHeightRef = useRef<number>(200);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    startYRef.current = e.touches[0].clientY;
+    startHeightRef.current = sidebarHeight;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (startYRef.current !== null) {
+      const deltaY = startYRef.current - e.touches[0].clientY;
+      const newHeight = Math.min(Math.max(startHeightRef.current + deltaY, 100), window.innerHeight * 0.9);
+      setSidebarHeight(newHeight);
+    }
+  };
+
   return (
-    <div className="bg-white/3 backdrop-filter backdrop-blur-xs text-black text-center flex fixed top-1 md:top-7 right-1 md:right-7 z-50 p-2 rounded-md shadow-xl max-h-[30vh] md:max-h-11/12 overflow-auto">
+    <div
+      className="bg-white/3 backdrop-filter backdrop-blur-xs text-black text-center justify-centerflex fixed bottom-0 left-0 md:left-auto md:bottom-auto md:top-7 right-1 md:right-7 z-50 rounded-md shadow-xl overflow-auto md:max-h-11/12"
+      style={{ height: `${sidebarHeight}px` }}
+    >
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        className="w-full h-4 cursor-row-resize touch-none bg-gray-300 rounded-t-md"
+      >
+        <div className="mx-auto w-12 h-1 bg-gray-500 rounded mt-1"></div>
+      </div>
+
       {loading ? (
-        <p className="text-gray-600 text-center">Loading lakes...</p>
+        <p className="text-gray-600 text-center ">Loading lakes...</p>
       ) : (
         <div className="flex flex-col items-center">
           {locationError && (
@@ -44,6 +72,7 @@ export default function LakeSidebar({
               ⚠️ Location not found. Showing all lakes.
             </p>
           )}
+
           <div className="sticky top-0 z-50 bg-gray-200 rounded-md p-2 w-full">
             <input
               className="cursor-pointer mx-2 align-middle"
@@ -57,7 +86,8 @@ export default function LakeSidebar({
             />
             <span>{radius} mi</span>
           </div>
-          <ul className="p-4 space-y-2">
+          
+          <ul className="p-4 grid grid-cols-2 gap-2 md:block md:space-y-2">
             {lakes
               .sort((a, b) => {
                 const distanceA = parseFloat(a.distance || "Infinity");
@@ -77,7 +107,7 @@ export default function LakeSidebar({
                     }
                     setSelectedLakeAction(lake);
                   }}
-                  className={`flex cursor-pointer border border-black/20 p-2 rounded hover:border-blue-800/45 ${
+                  className={`flex flex-col items-center cursor-pointer border border-black/20 p-2 rounded hover:border-blue-800/45 ${
                     selectedLake?.id === lake.id
                       ? "hover:bg-blue-600/25 bg-blue-600/25"
                       : ""
