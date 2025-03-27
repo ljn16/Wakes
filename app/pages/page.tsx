@@ -5,18 +5,17 @@ import "leaflet/dist/leaflet.css";
 import { useEffect, useState, useRef } from "react";
 
 //* UTILS *//
-import { parseGpxFile } from './utils/parseGPX';
-import { uploadToS3 } from './utils/s3Uploader';
-import { calculateDistance } from './utils/distanceUtils';
+import { parseGpxFile } from "../utils/parseGPX";
+import { uploadToS3 } from "../utils/s3Uploader";
+import { calculateDistance } from "../utils/distanceUtils";
 
 //* COMPONENTS *//
-import Footer from "./components/Footer";
-import LakeSidebar from "./components/LakeSidebar";
-import MapContainerWrapper from "./components/MapContainerWrapper";
-import LakeDetailsPanel from "./components/LakeDetailsPanel";
-import UploadPanel from "./components/UploadPanel";
-import Account from "./components/Account";
-
+import Footer from "../components/Footer";
+import LakeSidebar from "../components/LakeSidebar";
+import MapContainerWrapper from "../components/MapContainerWrapper";
+import LakeDetailsPanel from "../components/LakeDetailsPanel";
+import UploadPanel from "../components/UploadPanel";
+import Account from "../components/Account";
 
 interface Lake {
   id: number;
@@ -35,7 +34,9 @@ export default function Home() {
   const [uploadedFileType, setUploadedFileType] = useState<string | null>(null);
   const [selectedLake, setSelectedLake] = useState<Lake | null>(null);
   const [isRouteLoading, setIsRouteLoading] = useState(false);
-  const [lakeVideos, setLakeVideos] = useState<Record<number, string | null>>({});
+  const [lakeVideos, setLakeVideos] = useState<Record<number, string | null>>(
+    {}
+  );
   const [videoProgress, setVideoProgress] = useState<number>(0);
   const [locationError, setLocationError] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -43,7 +44,9 @@ export default function Home() {
   const gpxWorker = useRef<Worker | null>(null);
 
   useEffect(() => {
-    gpxWorker.current = new Worker(new URL('@/app/workers/gpxWorker.js', import.meta.url));
+    gpxWorker.current = new Worker(
+      new URL("@/app/workers/gpxWorker.js", import.meta.url)
+    );
     return () => gpxWorker.current?.terminate();
   }, []);
 
@@ -82,10 +85,9 @@ export default function Home() {
     speed: number | null;
     heading: number | null;
   }
-  
+
   const [points, setPoints] = useState<GpxPoint[]>([]);
   const [lakeTracks, setLakeTracks] = useState<Record<number, GpxPoint[]>>({});
-
 
   const mapRef = useRef<L.Map | null>(null);
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,7 +104,7 @@ export default function Home() {
         console.log("Uploaded to:", url);
         setUploadedUrl(url);
         setUploadedFileType(fileType);
-      
+
         console.log("📤 Sending to API:", {
           url,
           type: fileType,
@@ -122,7 +124,7 @@ export default function Home() {
           }),
         });
 
-        if (file.name.endsWith('.gpx')) {
+        if (file.name.endsWith(".gpx")) {
           const pts = await parseGpxFile(file);
           setPoints(pts);
         }
@@ -141,26 +143,31 @@ export default function Home() {
       setIsRouteLoading(true);
 
       fetch(`/api/media?lakeId=${lakeId}&type=application/gpx+xml`)
-        .then(res => {
-          if (!res.ok) throw new Error(`Failed to fetch media for lake ${lakeId}`);
+        .then((res) => {
+          if (!res.ok)
+            throw new Error(`Failed to fetch media for lake ${lakeId}`);
           return res.json();
         })
-        .then(data => {
+        .then((data) => {
           if (Array.isArray(data) && data.length > 0) {
             const media = data[0];
             if (media.url) return fetch(media.url);
           }
           throw new Error(`No GPX media found for lake ${lakeId}`);
         })
-        .then(res => res.blob())
-        .then(blob => {
-          const file = new File([blob], 'temp.gpx', { type: 'application/gpx+xml' });
+        .then((res) => res.blob())
+        .then((blob) => {
+          const file = new File([blob], "temp.gpx", {
+            type: "application/gpx+xml",
+          });
           return parseGpxFile(file);
         })
-        .then(pts => {
-          setLakeTracks(prev => ({ ...prev, [lakeId]: pts }));
+        .then((pts) => {
+          setLakeTracks((prev) => ({ ...prev, [lakeId]: pts }));
         })
-        .catch(err => console.error('Error loading GPX for selected lake', lakeId, err))
+        .catch((err) =>
+          console.error("Error loading GPX for selected lake", lakeId, err)
+        )
         .finally(() => {
           setIsRouteLoading(false);
         });
@@ -168,19 +175,22 @@ export default function Home() {
 
     if (!lakeVideos[lakeId]) {
       fetch(`/api/media?lakeId=${lakeId}&type=video/mp4`)
-        .then(res => {
-          if (!res.ok) throw new Error(`Failed to fetch video for lake ${lakeId}`);
+        .then((res) => {
+          if (!res.ok)
+            throw new Error(`Failed to fetch video for lake ${lakeId}`);
           return res.json();
         })
-        .then(data => {
+        .then((data) => {
           if (Array.isArray(data) && data.length > 0) {
             const media = data[0];
             if (media.url) {
-              setLakeVideos(prev => ({ ...prev, [lakeId]: media.url }));
+              setLakeVideos((prev) => ({ ...prev, [lakeId]: media.url }));
             }
           }
         })
-        .catch(err => console.error('Error loading video for lake', lakeId, err));
+        .catch((err) =>
+          console.error("Error loading video for lake", lakeId, err)
+        );
     }
   }, [selectedLake, lakeTracks, lakeVideos]);
 
@@ -278,7 +288,7 @@ export default function Home() {
         />
       </div>
 
-      < Footer />
+      <Footer />
 
       <style jsx global>{`
         .transparent-icon {
