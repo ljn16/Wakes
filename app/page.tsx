@@ -296,19 +296,7 @@ export default function Home() {
     return null;
   }, [L]);
 
-  function MouseCoordinates() {
-    const [coords, setCoords] = useState({ lat: 0, lng: 0 });
-    useMapEvents({
-      mousemove: (e) => {
-        setCoords(e.latlng);
-      },
-    });
-    return (
-      <div className="hidden md:block absolute bottom-1 right-1 bg-white/80 p-2 rounded-sm z-1000">
-        {`Lat: ${coords.lat.toFixed(4)}, Lng: ${coords.lng.toFixed(4)}`}
-      </div>
-    );
-  }
+
 
   return (
     <>
@@ -344,7 +332,7 @@ export default function Home() {
           uploadedUrl={uploadedUrl}
           uploadedFileType={uploadedFileType}
         />
-        
+
         <LakeSidebar
           lakes={lakes}
           radius={radius}

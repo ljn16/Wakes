@@ -83,6 +83,21 @@ export default function MapContainerWrapper({
     return <div className="flex justify-center items-center h-[500px]"><p className="text-gray-400">Loading map...</p></div>;
   }
 
+
+  function MouseCoordinates() {
+    const [coords, setCoords] = useState({ lat: 0, lng: 0 });
+    useMapEvents({
+      mousemove: (e) => {
+        setCoords(e.latlng);
+      },
+    });
+    return (
+      <div className="hidden md:block absolute bottom-1 right-1 bg-white/80 p-2 rounded-sm z-1000 text-black">
+        {`Lat: ${coords.lat.toFixed(4)}, Lng: ${coords.lng.toFixed(4)}`}
+      </div>
+    );
+  }
+
   return (
     <MapContainer
       ref={mapRef}
