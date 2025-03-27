@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/app/context/AuthContext";
+
 interface Props {
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   uploadedUrl: string | null;
@@ -11,6 +13,9 @@ export default function UploadPanel({
   uploadedUrl,
   uploadedFileType,
 }: Props) {
+  const { isLoggedIn, isAdmin } = useAuth();
+  if (!isLoggedIn || !isAdmin) return null;
+
   return (
     <div className="hidden md:block p-4 bg-white/3 backdrop-filter backdrop-blur-xs text-black shadow-md z-50 fixed text-xs left-14 top-4 rounded">
       <label htmlFor="mediaUpload" className="block mb-2 font-semibold">
