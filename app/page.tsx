@@ -7,7 +7,7 @@ import { useEffect, useState, useRef } from "react";
 //* UTILS *//
 import { parseGpxFile } from './utils/parseGPX';
 import { uploadToS3 } from './utils/s3Uploader';
-import { calculateDistance } from './utils/distanceUtils'; // Import calculateDistance
+import { calculateDistance } from './utils/distanceUtils';
 
 //* COMPONENTS *//
 import Footer from "./components/Footer";
@@ -83,7 +83,9 @@ export default function Home() {
   }
   
   const [points, setPoints] = useState<GpxPoint[]>([]);
-  const [lakeTracks, setLakeTracks] = useState<Record<number, any[]>>({});
+  const [lakeTracks, setLakeTracks] = useState<Record<number, GpxPoint[]>>({});
+
+
   const mapRef = useRef<L.Map | null>(null);
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
