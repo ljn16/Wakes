@@ -301,7 +301,7 @@ export default function Home() {
       },
     });
     return (
-      <div className="absolute bottom-1 right-1 bg-white/80 p-2 rounded-sm z-1000">
+      <div className="hidden md:block absolute bottom-1 right-1 bg-white/80 p-2 rounded-sm z-1000">
         {`Lat: ${coords.lat.toFixed(4)}, Lng: ${coords.lng.toFixed(4)}`}
       </div>
     );
@@ -430,48 +430,48 @@ export default function Home() {
                           Number(lakeId) === selectedLake?.id &&
                           pts.length > 0 &&
                           (() => {
-  const exactIndex = videoProgress * (pts.length - 1);
-  const index = Math.floor(exactIndex);
-  const nextIndex = Math.min(index + 1, pts.length - 1);
-  const t = exactIndex - index;
+                            const exactIndex = videoProgress * (pts.length - 1);
+                            const index = Math.floor(exactIndex);
+                            const nextIndex = Math.min(index + 1, pts.length - 1);
+                            const t = exactIndex - index;
 
-  const start = pts[index];
-  const end = pts[nextIndex];
+                            const start = pts[index];
+                            const end = pts[nextIndex];
 
-  const lat = start.lat + (end.lat - start.lat) * t;
-  const lon = start.lon + (end.lon - start.lon) * t;
-  const heading = start.heading ?? 0;
+                            const lat = start.lat + (end.lat - start.lat) * t;
+                            const lon = start.lon + (end.lon - start.lon) * t;
+                            const heading = start.heading ?? 0;
 
 
-  const trail = pts.slice(Math.max(index - 10, 0), index + 1).map(p => [p.lat, p.lon]);
+                            const trail = pts.slice(Math.max(index - 10, 0), index + 1).map(p => [p.lat, p.lon]);
 
-  return (
-    <>
-      <Polyline
-        positions={trail}
-        pathOptions={{ color: 'red', weight: 2, opacity: 0.5 }}
-      />
-      <Marker
-        key={`video-marker-${lakeId}`}
-        position={[lat, lon]}
-        icon={L?.divIcon({
-          html: `<div style="transform: rotate(${heading}deg); font-size: 16px;">➡️</div>`,
-          className: 'transparent-icon',
-          iconSize: [20, 20],
-          iconAnchor: [10, 10],
-          bgPos: [0, 0],
-        })}
-      >
-        {/* <Popup open>
-          <div>
-            <strong>Time:</strong> {time}s<br />
-            <strong>Speed:</strong> {speed.toFixed(1)} m/s
-          </div>
-        </Popup> */}
-      </Marker>
-    </>
-  );
-})()
+                            return (
+                              <>
+                                <Polyline
+                                  positions={trail}
+                                  pathOptions={{ color: 'red', weight: 2, opacity: 0.5 }}
+                                />
+                                <Marker
+                                  key={`video-marker-${lakeId}`}
+                                  position={[lat, lon]}
+                                  icon={L?.divIcon({
+                                    html: `<div style="transform: rotate(${heading}deg); font-size: 16px;">➡️</div>`,
+                                    className: 'transparent-icon',
+                                    iconSize: [20, 20],
+                                    iconAnchor: [10, 10],
+                                    bgPos: [0, 0],
+                                  })}
+                                >
+                                  {/* <Popup open>
+                                    <div>
+                                      <strong>Time:</strong> {time}s<br />
+                                      <strong>Speed:</strong> {speed.toFixed(1)} m/s
+                                    </div>
+                                  </Popup> */}
+                                </Marker>
+                              </>
+                            );
+                          })()
                         }
                       </>
                     )
@@ -609,35 +609,35 @@ export default function Home() {
           )}
         </div>
         {/* //? UPLOAD DATA (img, mp4, gpx) ????????????????????????//????????????????????????//????????????????????????//???????????????????????? */}
-        <div className="p-4 bg-white/3 backdrop-filter backdrop-blur-xs text-black shadow-md z-50 fixed text-xs left-14 top-4 rounded">
-        <label htmlFor="mediaUpload" className="block mb-2 font-semibold">Upload Image, Video, or GPX:</label>
-        <input
-          id="mediaUpload"
-          type="file"
-          multiple
-          accept=".jpg,.jpeg,.png,.mp4,.mov,.gpx"
-          onChange={handleFileUpload}
-          className="border rounded p-2"
-        />
-        {uploadedUrl && uploadedFileType && (
-          <div className="mt-4">
-            <p className="text-sm text-gray-600">Uploaded: {uploadedFileType}</p>
-            {uploadedFileType.startsWith('image') ? (
-              <div className="relative w-full h-60 mt-2 border">
-                <img src={uploadedUrl} alt="Preview" style={{ objectFit: "contain" }} />
-              </div>
-            ) : uploadedFileType.startsWith('video') ? (
-              <video src={uploadedUrl} controls className="w-full max-h-60 mt-2" />
-            ) : (
-              <p className="mt-2 text-sm italic text-gray-500">File uploaded.</p>
-            )}
+        <div className="hidden md:block p-4 bg-white/3 backdrop-filter backdrop-blur-xs text-black shadow-md z-50 fixed text-xs left-14 top-4 rounded">
+          <label htmlFor="mediaUpload" className="block mb-2 font-semibold">Upload Image, Video, or GPX:</label>
+          <input
+            id="mediaUpload"
+            type="file"
+            multiple
+            accept=".jpg,.jpeg,.png,.mp4,.mov,.gpx"
+            onChange={handleFileUpload}
+            className="border rounded p-2"
+          />
+          {uploadedUrl && uploadedFileType && (
+            <div className="mt-4">
+              <p className="text-sm text-gray-600">Uploaded: {uploadedFileType}</p>
+              {uploadedFileType.startsWith('image') ? (
+          <div className="relative w-full h-60 mt-2 border">
+            <img src={uploadedUrl} alt="Preview" style={{ objectFit: "contain" }} />
           </div>
-        )}
-      </div>
+              ) : uploadedFileType.startsWith('video') ? (
+          <video src={uploadedUrl} controls className="w-full max-h-60 mt-2" />
+              ) : (
+          <p className="mt-2 text-sm italic text-gray-500">File uploaded.</p>
+              )}
+            </div>
+          )}
+        </div>
         {/* //? SEARCH RADIUS ????????????????????????//????????????????????????//????????????????????????//???????????????????????? */}
 
 
-        <div className="bg-white/3 backdrop-filter backdrop-blur-xs text-black text-center flex fixed top-7 right-7 z-50 p-2 rounded-md shadow-xl max-h-[50vh] md:max-h-11/12 overflow-auto">
+        <div className="bg-white/3 backdrop-filter backdrop-blur-xs text-black text-center flex fixed top-7 right-7 z-50 p-2 rounded-md shadow-xl max-h-[30vh] md:max-h-11/12 overflow-auto">
           {/* Render list of lakes */}
           {loading ? (
             <p className="text-gray-600 text-center">Loading lakes...</p>
