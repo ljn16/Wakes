@@ -52,7 +52,7 @@ export default function LakeSidebar({
 
   return (
     <div
-      className="bg-white/3 backdrop-filter backdrop-blur-xs text-black text-center justify-centerflex fixed bottom-0 left-0 md:left-auto md:bottom-auto md:top-7 right-1 md:right-7 z-50 rounded-md shadow-xl overflow-auto md:max-h-11/12"
+      className="bg-white/3 backdrop-filter backdrop-blur-xs text-black text-center justify-centerflex fixed bottom-0 left-0 md:left-auto md:bottom-7 md:top-7 right-1 md:right-7 z-50 rounded-md shadow-xl overflow-auto md:w-1/5 "
       style={{ height: `${sidebarHeight}px` }}
     >
       <div
