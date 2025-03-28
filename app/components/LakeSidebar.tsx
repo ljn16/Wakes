@@ -85,7 +85,7 @@ export default function LakeSidebar({
             </p>
           )}
 
-          <div className="sticky top-0 z-50 bg-gray-200 rounded-b-md p-2 w-full">
+          <div className="sticky top-0 z-50 bg-gray-200 rounded-b-md p-2 w-full"> {/* //TODO */}
             <input
               className="cursor-pointer mx-2 align-middle"
               id="radius"
