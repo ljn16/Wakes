@@ -1,5 +1,6 @@
 "use client";
-import { RefObject } from "react";
+import { RefObject, useState } from "react";
+import { motion } from "framer-motion";
 
 interface Lake {
   id: number;
@@ -33,10 +34,11 @@ export default function LakeDetailsPanel({
   points,
   lakeVideos,
   videoRef,
-//   videoProgress,
   setVideoProgress,
   isRouteLoading,
 }: Props) {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
   if (!selectedLake) return null;
 
   const route = lakeTracks[selectedLake.id] || points;
@@ -72,26 +74,48 @@ export default function LakeDetailsPanel({
   };
 
   return (
-    <div className="absolute top-4 left-4 bg-white/3 backdrop-filter backdrop-blur-xs p-2 rounded shadow-lg z-[1000] text-black">
-      <div className="flex justify-between items-center mb-2">
+    <motion.div
+      drag
+      dragMomentum={false}
+      onDragEnd={(_, info) => {
+        setPosition({ x: info.point.x, y: info.point.y });
+      }}
+      style={{ x: position.x, y: position.y }}
+      className="absolute top-4 left-4 bg-white/3 backdrop-filter backdrop-blur-xs p-2 rounded shadow-lg z-[1000] text-black cursor-move"
+    >
+
+      <div className="flex justify-center items-center cursor-move p-2 pt-1">
+        <span className="block w-1.5 h-1.5 bg-gray-500 rounded-full mx-1"></span>
+        <span className="block w-1.5 h-1.5 bg-gray-500 rounded-full mx-1"></span>
+        <span className="block w-1.5 h-1.5 bg-gray-500 rounded-full mx-1"></span>
+      </div>
+      
+      
+      <button
+        onClick={() => setSelectedLake(null)}
+        className="text-gray-500 hover:text-black cursor-pointer absolute top-1 right-2"
+      >
+        ✕
+      </button>
+
+
+      <div className="flex justify-center items-center">
         <h2 className="text-lg font-semibold">
           {selectedLake.name}&nbsp;&nbsp;
-          <span className="font-normal text-sm">{selectedLake.distance}</span>
+          {/* <span className="font-normal text-sm">{selectedLake.distance}</span> */}
         </h2>
-        <button
-          onClick={() => setSelectedLake(null)}
-          className="text-gray-500 hover:text-black cursor-pointer"
-        >
-          ✕
-        </button>
+
       </div>
-      <ul>
+      <ul className="flex space-x-2 justify-center items-center text-black/80">
         {isRouteLoading && (
           <li className="text-blue-500 mt-2 italic">Route loading...</li>
         )}
-        <li>Route distance: {getRouteDistance()}</li>
-        <li>Estimated Time: {getEstimatedTime()}</li>
-        <li className="mt-2">
+ 
+        <li className="">{getRouteDistance()}</li>
+        <span className="text-black/50">&nbsp;•&nbsp;</span>
+        <li>{getEstimatedTime()}</li>
+        <span className="text-black/50">&nbsp;•&nbsp;</span>
+        <li className="flex items-center">
           <a
             href={`https://fishing-app.gpsnauticalcharts.com/i-boating-fishing-web-app/fishing-marine-charts-navigation.html?title=${encodeURIComponent(
               selectedLake.name + ", LAKE boating app"
@@ -100,7 +124,7 @@ export default function LakeDetailsPanel({
             rel="noopener noreferrer"
             className="text-blue-600 underline flex items-center gap-1"
           >
-            View depth map
+            Depth map
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -117,12 +141,12 @@ export default function LakeDetailsPanel({
       </ul>
 
       {lakeVideos[selectedLake.id] && (
-        <div className="mt-2 bg-black rounded overflow-hidden z-[1100]">
+        <div className="mt-2 rounded overflow-hidden z-[1100]">
           <video
             ref={videoRef}
             src={lakeVideos[selectedLake.id]!}
             controls
-            className="w-full aspect-video max-h-96"
+            className="w-full aspect-video max-h-72"
             onTimeUpdate={(e) => {
               const current = e.currentTarget.currentTime;
               const duration = e.currentTarget.duration;
@@ -136,6 +160,6 @@ export default function LakeDetailsPanel({
           />
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

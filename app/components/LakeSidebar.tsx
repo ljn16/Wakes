@@ -58,19 +58,25 @@ export default function LakeSidebar({
 
   return (
     <div
-      className="bg-white/3 backdrop-filter backdrop-blur-xs text-black text-center justify-centerflex fixed bottom-0 left-0 md:left-auto md:bottom-7 md:top-7 right-1 md:right-7 z-50 rounded-md shadow-xl overflow-auto md:w-1/5 md:h-3/4"
+      className="bg-white/3 backdrop-filter backdrop-blur-xs text-black text-center justify-centerflex fixed bottom-0 left-0 md:left-auto md:bottom-7 md:top-7 right-1 md:right-7 z-50 rounded-md shadow-xl overflow-auto md:w-fit md:min-w-1/5 md:h-3/4"
       style={{ height: `${sidebarHeight}px` }}
     >
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
-        className="w-full h-4 cursor-grab touch-none bg-gray-300 rounded-t-md"
+        className="w-full h-4 p-1 cursor touch-none transparent rounded-t-md md:hidden"
       >
         <div className="mx-auto w-12 h-1 bg-gray-500 rounded mt-1"></div>
       </div>
 
       {loading ? (
-        <p className="text-gray-600 text-center ">Loading lakes...</p>
+        <div className="flex flex-col items-center justify-center h-full">
+          <svg className="animate-spin h-8 w-8 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <p className="text-gray-600 mt-4">Loading lakes...</p>
+        </div>
       ) : (
         <div className="flex flex-col items-center">
           {locationError && (
@@ -90,19 +96,24 @@ export default function LakeSidebar({
               value={radius}
               onChange={(e) => setRadiusAction(Number(e.target.value))}
             />
-            <span>{radius} mi</span>
+            <span>{radius} mi away</span>
           </div>
           
           <ul className="p-4 grid grid-cols-2 gap-2 md:block md:space-y-2">
-            {lakes
-              .sort((a, b) => {
-                const distanceA = parseFloat(a.distance || "Infinity");
-                const distanceB = parseFloat(b.distance || "Infinity");
-                return distanceA - distanceB;
-              })
+            {lakes.sort((a, b) => {
+              const distanceA = parseFloat(a.distance || "Infinity");
+              const distanceB = parseFloat(b.distance || "Infinity");
+              return distanceA - distanceB;
+            })
               .map((lake) => (
                 <li
                   key={lake.id}
+                  className={`flex flex-col md:flex-row items-center cursor-pointer border border-black/20 p-2 rounded hover:border-blue-800/45 w-min-fit ${
+                    selectedLake?.id === lake.id
+                      ? "hover:bg-blue-600/25 bg-blue-600/25"
+                      : ""
+                  } transition-colors`}
+
                   onClick={() => {
                     if (mapRef.current) {
                       mapRef.current.setView(
@@ -113,17 +124,13 @@ export default function LakeSidebar({
                     }
                     setSelectedLakeAction(lake);
                   }}
-                  className={`flex flex-col items-center cursor-pointer border border-black/20 p-2 rounded hover:border-blue-800/45 ${
-                    selectedLake?.id === lake.id
-                      ? "hover:bg-blue-600/25 bg-blue-600/25"
-                      : ""
-                  } transition-colors`}
                   style={{
                     opacity:
                       parseFloat(lake.distance) > radius ? 0.5 : 1,
                   }}
                 >
-                  <span className="h-20 w-20 bg-amber-400 mr-2">
+
+                  <span className="h-20 w-20 bg-blue-500 mr-2">
                     <Image
                       src={lakePH.src}
                       alt="placeholder"
@@ -132,8 +139,18 @@ export default function LakeSidebar({
                       height={20}
                     />
                   </span>
-                  <span>{lake.name}</span>&nbsp;
-                  <span className="text-black/50">{lake.distance}</span>
+                  <div className="flex flex-col items-start w-full">
+                    <div className="w-full flex items-start justify-between">
+                      <span>{lake.name}</span>&nbsp;
+                      <span className="text-black/50">{lake.distance}</span>
+                    </div>
+                    <div className="flex w-full justify-between text-xs text-gray-600">
+                      <span>Route: x</span>
+                      <span>Est.</span>
+                    </div>
+
+                  </div>
+
                 </li>
               ))}
           </ul>

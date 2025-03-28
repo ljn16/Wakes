@@ -79,8 +79,8 @@ export default function MapContainerWrapper({
       },
     });
     return (
-      <div className="hidden md:block absolute bottom-1 right-1 bg-white/80 p-2 rounded-sm z-1000 text-black">
-        {`Lat: ${coords.lat.toFixed(4)}, Lng: ${coords.lng.toFixed(4)}`}
+      <div className="hidden md:block absolute bottom-0 right-0 bg-white px-1  z-1000 text-black">
+        {`${coords.lat.toFixed(3)}, ${coords.lng.toFixed(3)}`}
       </div>
     );
   }
