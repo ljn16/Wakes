@@ -96,17 +96,18 @@ export default function MapContainerWrapper({
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       <MouseCoordinates />
       {currentLocation && (
-        <div>
+        <div >
           <svg style={{ height: 0, width: 0, position: "absolute" }}>
             <defs>
               <radialGradient id="circleGradient" cx="50%" cy="50%" r="50%">
-          <stop offset="50%" stopColor="blue" stopOpacity={0.2} />
-          <stop offset="100%" stopColor="blue" stopOpacity={0.1} />
+                <stop offset="50%" stopColor="blue" stopOpacity={0.5} />
+                <stop offset="100%" stopColor="blue" stopOpacity={0.3} />
               </radialGradient>
             </defs>
           </svg>
-          <Circle center={currentLocation} radius={(radius * 1609.34 * 1) / 2} pathOptions={{ stroke: false, fillColor: "url(#circleGradient)" }} />
+          <Circle center={currentLocation} radius={(radius * 1609.34 * 1) / 2} pathOptions={{ stroke: false, fillColor: "url(#circleGradient)", fillOpacity: 0.5 } } />
           <Circle center={currentLocation} radius={radius * 1609.34} pathOptions={{ stroke: false, fillColor: "url(#circleGradient)" }} />
+
         </div>
       )}
 
