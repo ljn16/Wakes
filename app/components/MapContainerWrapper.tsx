@@ -105,7 +105,7 @@ export default function MapContainerWrapper({
               </radialGradient>
             </defs>
           </svg>
-          <Circle center={currentLocation} radius={(radius * 1609.34 * 1) / 2} pathOptions={{ stroke: false, fillColor: "url(#circleGradient)", fillOpacity: 0.1 } } />
+          <Circle center={currentLocation} radius={(radius * 1609.34 * 1) / 2} pathOptions={{ stroke: false, fillColor: "url(#circleGradient)", fillOpacity: 0.15 } } />
           <Circle center={currentLocation} radius={radius * 1609.34} pathOptions={{ stroke: false, fillColor: "url(#circleGradient)" }} />
 
         </div>
