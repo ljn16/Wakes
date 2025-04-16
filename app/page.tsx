@@ -15,7 +15,7 @@ import LakeSidebar from "./components/LakeSidebar";
 import MapContainerWrapper from "./components/MapContainerWrapper";
 import LakeDetailsPanel from "./components/LakeDetailsPanel";
 import UploadPanel from "./components/UploadPanel";
-import Account from "./components/Account";
+// import Account from "./components/Account";
 
 interface Lake {
   id: number;
@@ -242,7 +242,7 @@ export default function Home() {
 
   return (
     <>
-      <Account />
+      {/* <Account /> */}
       <div className="flex">
         <div className="h-screen w-full relative">
           <MapContainerWrapper
