@@ -11,10 +11,11 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.758.0",
-    "@prisma/client": "^6.5.0",
+    "@prisma/client": "^6.6.0",
     "@supabase/supabase-js": "^2.49.3",
     "aws-sdk": "^2.1692.0",
     "fast-xml-parser": "^5.0.9",
+    "firebase": "^11.8.1",
     "framer-motion": "^12.6.2",
     "gpxparser": "^3.0.8",
     "leaflet": "^1.9.4",
@@ -36,7 +37,7 @@
     "@types/uuid": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.2.2",
-    "prisma": "^6.5.0",
+    "prisma": "^6.6.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

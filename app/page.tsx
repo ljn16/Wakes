@@ -15,6 +15,7 @@ import LakeSidebar from "./components/LakeSidebar";
 import MapContainerWrapper from "./components/MapContainerWrapper";
 import LakeDetailsPanel from "./components/LakeDetailsPanel";
 import UploadPanel from "./components/UploadPanel";
+import Header from "./components/Header";
 // import Account from "./components/Account";
 
 interface Lake {
@@ -257,6 +258,7 @@ export default function Home() {
             mapRef={mapRef}
             radius={radius}
           />
+          < Header />
           <LakeDetailsPanel
             selectedLake={selectedLake}
             setSelectedLake={setSelectedLake}

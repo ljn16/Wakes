@@ -11,12 +11,22 @@ const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), { 
 const Circle = dynamic(() => import("react-leaflet").then((mod) => mod.Circle), { ssr: false });
 const Polyline = dynamic(() => import("react-leaflet").then((mod) => mod.Polyline), { ssr: false });
 
+// interface Lake {
+//   id: number;
+//   name: string;
+//   distance: string;
+//   latitude: number;
+//   longitude: number;
+// }
 interface Lake {
-  id: number;
+  id: number | string;
   name: string;
   distance: string;
-  latitude: number;
-  longitude: number;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  parking?: (string | { latitude: number; longitude: number } | [number, number])[];
 }
 
 interface GpxPoint {
@@ -111,25 +121,64 @@ export default function MapContainerWrapper({
         </div>
       )}
 
-      {lakes.map((lake) => (
-        <Marker
-          key={lake.id}
-          position={[lake.latitude, lake.longitude]}
-          eventHandlers={{
-            mouseover: (e) => e.target.openPopup(),
-            mouseout: (e) => e.target.closePopup(),
-            click: () => {
-              mapRef.current?.setView([lake.latitude, lake.longitude], 14, { animate: true });
-              setSelectedLake(lake);
-            },
-          }}
-          icon={blueIcon!}
-        >
-          <Popup>
-            <strong>{lake.name}</strong>&nbsp;{lake.distance}
-          </Popup>
-        </Marker>
-      ))}
+      {lakes
+        .filter(lake => lake.coordinates?.latitude && lake.coordinates?.longitude)
+        .map((lake) => (
+          <Marker
+            key={lake.id}
+            position={[lake.coordinates.latitude, lake.coordinates.longitude]}
+            eventHandlers={{
+              mouseover: (e) => e.target.openPopup(),
+              mouseout: (e) => e.target.closePopup(),
+              click: () => {
+                mapRef.current?.setView([lake.coordinates.latitude, lake.coordinates.longitude], 14, { animate: true });
+                setSelectedLake(lake);
+              },
+            }}
+            icon={blueIcon!}
+          >
+            <Popup>
+              <strong>{lake.name}</strong>&nbsp;{lake.distance}
+            </Popup>
+          </Marker>
+        ))}
+
+      {lakes
+        .filter(lake => Array.isArray(lake.parking))
+        .flatMap((lake) =>
+          lake.parking!.map((point: any, index: number) => {
+            let lat, lon;
+
+            if (typeof point === 'string') {
+              const match = point.match(/([-+]?\d*\.?\d+)[^\d-]+([-+]?\d*\.?\d+)/);
+              if (!match) return null;
+              lat = parseFloat(match[1]);
+              lon = parseFloat(match[2]);
+            } else if (typeof point === 'object' && 'latitude' in point && 'longitude' in point) {
+              lat = point.latitude;
+              lon = point.longitude;
+            } else if (Array.isArray(point)) {
+              [lat, lon] = point;
+            } else {
+              return null;
+            }
+
+            return (
+              <Marker
+                key={`${lake.id}-parking-${index}`}
+                position={[lat, lon]}
+                icon={L?.divIcon({
+                  html: `<div style="background: #f39c12; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white;"></div>`,
+                  className: "",
+                  iconSize: [20, 20],
+                  iconAnchor: [10, 10],
+                })}
+              >
+                <Popup>Parking</Popup>
+              </Marker>
+            );
+          })
+        )}
 
       {currentLocation && lakeIcon && (
         <Marker position={currentLocation} icon={lakeIcon}>

@@ -1,11 +1,13 @@
 generator client {
-  provider = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-3.0.x"]
+  provider        = "prisma-client-js"
+  binaryTargets   = ["native", "debian-openssl-3.0.x"]
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
   url = env("DATABASE_URL")
+  schemas = ["public", "auth"]
 }
 
 model Lake {
@@ -15,6 +17,23 @@ model Lake {
   longitude Float
   distance  Float?
   media     Media[]   // relation to media files
+  images    LakeImage[]
+
+  @@schema("public")
+}
+
+model LakeImage {
+  id        Int      @id @default(autoincrement())
+  lake      Lake     @relation(fields: [lakeId], references: [id])
+  lakeId    Int
+  url       String
+  isMain    Boolean  @default(false)
+  latitude  Float?
+  longitude Float?
+  timestamp DateTime?
+  createdAt DateTime @default(now())
+
+  @@schema("public")
 }
 
 model Media {
@@ -25,4 +44,6 @@ model Media {
   lake     Lake?    @relation(fields: [lakeId], references: [id])
   lakeId   Int?
   createdAt DateTime @default(now())
+
+  @@schema("public")
 }
