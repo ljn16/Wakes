@@ -7,7 +7,7 @@ const Header: React.FC = () => {
         <header className="fixed top-5 px-25 left-1/2 transform -translate-x-1/2 w-fit z-50 backdrop-blur-sm bg-white/20 shadow-md rounded-3xl">
             <div className="flex items-center p-4">
                 <span className="ml-3 text-3xl font-bold text-gray-800 pr-5">Wakes</span>
-                <Image src={MainAppIcon} alt="Wakes Icon" width={40} height={40} />
+                <Image src={MainAppIcon} alt="Wakes Icon" width={40} height={40} className="rounded" />
             </div>
         </header>
     );
